@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/auth/sign-up": {
             "post": {
-                "description": "Создает новый аккаунт пользователя через auth-service",
+                "description": "Creates a new user account",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,10 +27,10 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Регистрация",
+                "summary": "User registration",
                 "parameters": [
                     {
-                        "description": "Данные пользователя",
+                        "description": "user data",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -41,13 +41,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "UUID пользователя",
+                        "description": "user UUID",
                         "schema": {
                             "type": "integer"
                         }
                     },
                     "400": {
-                        "description": "Ошибка валидации",
+                        "description": "validation error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

@@ -37,14 +37,11 @@ func NewClient(addr string, log *slog.Logger) (*grpc.ClientConn, error) {
     opts := []grpc.DialOption{
         // Пока используем insecure. В проде тут будут TLS сертификаты
         grpc.WithTransportCredentials(insecure.NewCredentials()),
-        
-        // Цепляем цепочку интерцепторов
         grpc.WithChainUnaryInterceptor(
             loggingInterceptor(log),
         ),
     }
 
-    // grpc.NewClient — современная замена устаревшему grpc.DialContext
     conn, err := grpc.NewClient(addr, opts...)
     if err != nil {
         return nil, fmt.Errorf("failed to create gRPC client for %s: %w", addr, err)

@@ -8,24 +8,23 @@ import (
 )
 
 // signUp регистрирует нового пользователя
-// @Summary      Регистрация
-// @Description  Создает новый аккаунт пользователя через auth-service
+// @Summary      User registration
+// @Description  Creates a new user account
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        input body domain.RegisterRequest true "Данные пользователя"
-// @Success      200  {integer} map[string]string "UUID пользователя"
-// @Failure      400  {object}  map[string]string "Ошибка валидации"
+// @Param        input body domain.RegisterRequest true "user data"
+// @Success      200  {integer} map[string]string "user UUID"
+// @Failure      400  {object}  map[string]string "validation error"
 // @Router       /auth/sign-up [post]
 func (h *Handler) signUp(c *gin.Context) {
-    c.JSON(http.StatusOK, map[string]interface{}{
+	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": 67,
 	})
 }
 
 func (h *Handler) signIn(c *gin.Context) {
-    c.JSON(http.StatusOK, map[string]interface{}{
+	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": 67,
 	})
 }
-

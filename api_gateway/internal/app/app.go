@@ -24,7 +24,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 
 	authConn, err := client.NewClient(cfg.Clients.AuthService.Address, log)
 	if err != nil {
-		panic(err) // На старте приложения panic оправдан, если мы не можем собрать зависимости
+		panic(err)
 	}
 	conns = append(conns, authConn)
 

@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/app"
-	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/config"
-	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/pkg/logger"
+	"github.com/SiriusDocs/backend/api_gateway/internal/app"
+	"github.com/SiriusDocs/backend/api_gateway/internal/config"
+	"github.com/SiriusDocs/backend/api_gateway/pkg/logger"
 )
 
 // @title           Sirius docs API

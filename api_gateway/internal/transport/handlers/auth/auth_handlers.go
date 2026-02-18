@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	_ "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/domain"
+	_ "github.com/SiriusDocs/backend/api_gateway/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,4 +1,4 @@
-module git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway
+module github.com/SiriusDocs/backend/api_gateway
 
 go 1.25.7
 

@@ -5,13 +5,12 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-    _ "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/docs"
+    _ "github.com/SiriusDocs/backend/api_gateway/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 )
 
-// Router больше не содержит логику бизнес-хэндлеров
 func NewRouter() *gin.Engine {
     router := gin.Default()
     router.MaxMultipartMemory = 1

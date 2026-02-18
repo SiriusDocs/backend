@@ -3,7 +3,7 @@ package auth
 import (
     "log/slog"
     "github.com/gin-gonic/gin"
-    "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/services"
+    "github.com/SiriusDocs/backend/api_gateway/internal/services"
 )
 
 type Handler struct {
@@ -11,7 +11,6 @@ type Handler struct {
     service services.AuthService
 }
 
-// Конструктор хэндлера получает сервис
 func New(log *slog.Logger, service services.AuthService) *Handler {
     return &Handler{
         log:     log,
@@ -19,7 +18,6 @@ func New(log *slog.Logger, service services.AuthService) *Handler {
     }
 }
 
-// Метод для регистрации роутов ИМЕННО этого домена
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
     authGroup := rg.Group("/auth")
     {

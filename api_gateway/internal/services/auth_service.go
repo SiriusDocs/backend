@@ -2,7 +2,7 @@ package services
 
 import (
     "context"
-    "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/pkg/api/auth"
+    "github.com/SiriusDocs/backend/api_gateway/pkg/api/auth"
 )
 
 type AuthService interface {

@@ -5,13 +5,13 @@ import (
 
 	"google.golang.org/grpc"
 
-	client "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/app/grpc"
-	httpapp "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/app/http"
-	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/config"
-	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/services"
-	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/transport"
-	authHandler "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/internal/transport/handlers/auth"
-	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/api_gateway/pkg/api/auth"
+	client "github.com/SiriusDocs/backend/api_gateway/internal/app/grpc"
+	httpapp "github.com/SiriusDocs/backend/api_gateway/internal/app/http"
+	"github.com/SiriusDocs/backend/api_gateway/internal/config"
+	"github.com/SiriusDocs/backend/api_gateway/internal/services"
+	"github.com/SiriusDocs/backend/api_gateway/internal/transport"
+	authHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/auth"
+	"github.com/SiriusDocs/backend/api_gateway/pkg/api/auth"
 )
 
 type App struct {

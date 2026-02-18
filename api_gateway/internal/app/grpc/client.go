@@ -31,8 +31,6 @@ func loggingInterceptor(log *slog.Logger) grpc.UnaryClientInterceptor {
 
 // NewClient — универсальная фабрика для создания gRPC-соединений
 func NewClient(addr string, log *slog.Logger) (*grpc.ClientConn, error) {
-    // В современном gRPC таймауты задаются при самом вызове метода (в хэндлере), 
-    // а не при создании соединения.
     
     opts := []grpc.DialOption{
         // Пока используем insecure. В проде тут будут TLS сертификаты

@@ -3,21 +3,26 @@ package transport
 import (
 	"time"
 
+	_ "github.com/SiriusDocs/backend/api_gateway/docs"
+	"github.com/SiriusDocs/backend/api_gateway/internal/config"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-    _ "github.com/SiriusDocs/backend/api_gateway/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-
 )
 
-func NewRouter() *gin.Engine {
+func NewRouter(cfg *config.Config) *gin.Engine {
     router := gin.Default()
     router.MaxMultipartMemory = 1
     router.RedirectTrailingSlash = false
 
     config := cors.DefaultConfig()
-    config.AllowOrigins = []string{"http://localhost:5174"}
+
+	if len(cfg.HTTPServer.AllowedOrigins) > 0 && cfg.HTTPServer.AllowedOrigins[0] != "" {
+        config.AllowOrigins = cfg.HTTPServer.AllowedOrigins
+    } else {
+        config.AllowOrigins = []string{"http://localhost:5174"} 
+    }
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 	config.ExposeHeaders = []string{"Content-Length"}

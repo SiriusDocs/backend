@@ -38,7 +38,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	// documentClient := billing.NewDocumentClient(documentConn)
 	// documentService := services.NewDocumentService(documentClient)
 
-	router := transport.NewRouter()
+	router := transport.NewRouter(cfg)
 	apiGroup := router.Group("/")
 
 	authHndlr := authHandler.New(log, authService)

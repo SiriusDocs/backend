@@ -1,6 +1,6 @@
 # Api-шлюз для маршрутизации запросов
 
-Пример config-файла (local):
+**Пример config-файла (local):**
 `./configs/server/local.yaml`
 ```yaml
 env: "local"
@@ -10,6 +10,10 @@ http_server:
   port: 8080
   timeout: 4s
   idle_timeout: 60s
+  allowed_origins:
+  - http://localhost:5173
+  - http://localhost:5174
+  - http://localhost:3000
 
 clients:
   auth_service:
@@ -19,8 +23,13 @@ clients:
 
  ...
 ```
+**Переменные окружения:**
+В корне проекта создать .env:
+```
+CONFIG_PATH=./configs/server/local.yaml 
+```
 
-Запуск микросервиса (без docker):
+**Запуск микросервиса (без docker):**
 ```bash
 go mod download
 go run cmd/app/main.go

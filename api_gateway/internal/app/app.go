@@ -11,7 +11,7 @@ import (
 	"github.com/SiriusDocs/backend/api_gateway/internal/services"
 	"github.com/SiriusDocs/backend/api_gateway/internal/transport"
 	authHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/auth"
-	"github.com/SiriusDocs/backend/api_gateway/pkg/api/auth"
+	"github.com/SiriusDocs/protos/gen/go/auth"
 )
 
 type App struct {

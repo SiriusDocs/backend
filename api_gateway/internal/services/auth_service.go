@@ -2,7 +2,7 @@ package services
 
 import (
     "context"
-    "github.com/SiriusDocs/backend/api_gateway/pkg/api/auth"
+    "github.com/SiriusDocs/protos/gen/go/auth"
 )
 
 type AuthService interface {

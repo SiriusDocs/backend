@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	_ "github.com/SiriusDocs/backend/api_gateway/internal/domain"
+	"github.com/SiriusDocs/protos/gen/go/auth"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,8 +19,13 @@ import (
 // @Failure      400  {object}  map[string]string "validation error"
 // @Router       /auth/sign-up [post]
 func (h *Handler) signUp(c *gin.Context) {
+	resp, _ := h.service.Register(c.Request.Context(), &auth.RegisterRequest{
+			Username: "67",
+			Email:    "67@67",
+			Password: "67",
+		})
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"id": 67,
+		"id": resp,
 	})
 }
 

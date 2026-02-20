@@ -14,6 +14,7 @@ type Config struct {
 	GRPC           GRPCConfig `yaml:"auth_service"`
 	Db             DBConfig
 	MigrationsPath string // путь до директории с миграциями
+	SigningKey     string
 }
 
 type DBConfig struct {
@@ -39,7 +40,11 @@ func MustLoad() *Config {
 		log.Fatal("CONFIG_PATH is not set")
 	}
 	migrationsPath := os.Getenv("MIGRATIONS_PATH")
-	if configPath == "" {
+	if migrationsPath == "" {
+		log.Fatal("MIGRATIONS_PATH is not set")
+	}
+	signingKey := os.Getenv("SIGNING_KEY")
+	if signingKey == "" {
 		log.Fatal("MIGRATIONS_PATH is not set")
 	}
 
@@ -59,6 +64,7 @@ func MustLoad() *Config {
 	var cfg Config
 	cfg.Db = db
 	cfg.MigrationsPath = migrationsPath
+	cfg.SigningKey = signingKey
 
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		log.Fatalf("cannot read config: %s", err)

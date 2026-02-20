@@ -1,30 +1,87 @@
 package users
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
+	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/domain"
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/storage"
+	tokenmanager "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/pkg/token-manager"
+)
+
+const (
+	accessTokenTTL  = 15 * time.Minute
+	refreshTokenTTL = 87600 * time.Minute
 )
 
 type UsersService struct{
 	log *slog.Logger
 	store storage.UserOperations
+	manager *tokenmanager.Manager
 }
 
-func NewUserOperations(logger *slog.Logger, store storage.UserOperations) *UsersService {
+func NewUserOperations(logger *slog.Logger, store storage.UserOperations, manager *tokenmanager.Manager) *UsersService {
 	return &UsersService{
 		log: logger,
 		store: store,
+		manager: manager,
 	}
 }
 
-func (u *UsersService) CreateUser(username string, email string, password string) (int64, error){
-	id, err := u.store.CreateUser(username,email,generatePasswordHash(password))
+func (u *UsersService) CreateUser(ctx context.Context, username string, email string, password string) (int64, error){
+	id, err := u.store.CreateUser(ctx, username,email,generatePasswordHash(password))
 	return id, err
 }
+
+func (u *UsersService) GenerateTokens(ctx context.Context, email string, password string) (int64, domain.Tokens, error) {
+	user, err := u.store.GetUser(ctx, email, generatePasswordHash(password))
+	if err != nil {
+		fmt.Println(err)
+		return 0,domain.Tokens{},err
+	}
+	return u.createSession(ctx, user)
+}
+
+func (u *UsersService) RefreshToken(ctx context.Context, refreshToken string) (domain.Tokens, error) {
+	userId, err := u.store.IsTokenValid(ctx, refreshToken)
+	if err != nil {
+		return domain.Tokens{}, err
+	}
+
+	user := domain.User{Id: userId}
+	_, tokens, err := u.createSession(ctx, user)
+
+	return tokens, err
+}
+
+//--------------------
+
+func (u *UsersService) createSession(ctx context.Context, user domain.User) (int64, domain.Tokens, error) {
+	var (
+		res domain.Tokens
+		err error
+	)
+	res.AccessToken, err = u.manager.NewJWT(user, accessTokenTTL)
+	if err != nil {
+		return 0, domain.Tokens{}, err
+	}
+	res.RefreshToken, err = u.manager.NewRefreshToken()
+	if err != nil {
+		return 0, domain.Tokens{}, err
+	}
+
+	session := tokenmanager.Session{
+		RefreshToken: res.RefreshToken,
+		ExpiresAt:    time.Now().Add(refreshTokenTTL),
+	}
+	err = u.store.SetSession(ctx, user.Id, session)
+	return user.Id, res, err
+}
+
 
 func generatePasswordHash(password string) string {
 	hash := sha1.New()

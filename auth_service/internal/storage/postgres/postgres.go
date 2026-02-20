@@ -8,6 +8,7 @@ import (
 
 const (
 	usersTable = "users"
+	refreshSessionsTable = "refresh_sessions"
 )
 
 func NewPostgresDB(host string, port string, username string, DBName string, password string, sslMode string) (*sqlx.DB, error) {

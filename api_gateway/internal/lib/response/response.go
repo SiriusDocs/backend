@@ -18,6 +18,11 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+type ErrorResponseMes struct {
+	Status  string `json:"status" example:"error"`
+	Message string `json:"message" example:"invalid request body"`
+}
+
 const (
 	StatusSuccess = "success"
 	StatusError   = "error"
@@ -32,7 +37,7 @@ func Success(c *gin.Context, data interface{}) {
 }
 
 // Error отправляет кастомную ошибку с заданным кодом
-func Error(c *gin.Context, code int, message string) {
+func ErrorResponse(c *gin.Context, code int, message string) {
 	c.AbortWithStatusJSON(code, Response{
 		Status:  StatusError,
 		Message: message,
@@ -61,7 +66,7 @@ func ParseGRPCError(c *gin.Context, log *slog.Logger, err error, action string) 
 	st, ok := status.FromError(err)
 	if !ok {
 		log.Error("non-grpc error", slog.String("action", action), slog.Any("err", err))
-		Error(c, http.StatusInternalServerError, "internal server error")
+		ErrorResponse(c, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
@@ -73,18 +78,18 @@ func ParseGRPCError(c *gin.Context, log *slog.Logger, err error, action string) 
 
 	switch st.Code() {
 	case codes.InvalidArgument:
-		Error(c, http.StatusBadRequest, st.Message())
+		ErrorResponse(c, http.StatusBadRequest, st.Message())
 	case codes.Unauthenticated:
-		Error(c, http.StatusUnauthorized, "unauthorized access")
+		ErrorResponse(c, http.StatusUnauthorized, "unauthorized access")
 	case codes.PermissionDenied:
-		Error(c, http.StatusForbidden, "access denied")
+		ErrorResponse(c, http.StatusForbidden, "access denied")
 	case codes.AlreadyExists:
-		Error(c, http.StatusConflict, st.Message())
+		ErrorResponse(c, http.StatusConflict, st.Message())
 	case codes.NotFound:
-		Error(c, http.StatusNotFound, st.Message())
+		ErrorResponse(c, http.StatusNotFound, st.Message())
 	case codes.DeadlineExceeded:
-		Error(c, http.StatusGatewayTimeout, "service timeout")
+		ErrorResponse(c, http.StatusGatewayTimeout, "service timeout")
 	default:
-		Error(c, http.StatusInternalServerError, "internal service error")
+		ErrorResponse(c, http.StatusInternalServerError, "internal service error")
 	}
 }

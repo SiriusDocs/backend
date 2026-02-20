@@ -8,7 +8,8 @@ import (
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/services"
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/storage"
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/storage/postgres"
-		_ "github.com/lib/pq"
+	tokenmanager "git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/pkg/token-manager"
+	_ "github.com/lib/pq"
 )
 
 type App struct {
@@ -21,8 +22,12 @@ func New(logger *slog.Logger, cfg *config.Config) *App {
 	if err != nil {
 		panic(err)
 	}
+	manager, err := tokenmanager.NewManager(cfg.SigningKey)
+	if err != nil {
+		panic(err)
+	}
 	storage := storage.NewPostgresStorage(db)
-	service := services.NewService(logger, storage)
+	service := services.NewService(logger, storage, manager)
 	grpcApp := grpcapp.New(logger, service, cfg.GRPC.Port)
 
 	return &App{GRPCServer: grpcApp}

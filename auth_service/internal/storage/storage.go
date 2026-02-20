@@ -7,6 +7,7 @@ import (
 )
 
 type UserOperations interface {
+	CreateUser(username string, email string, password string) (int64, error)
 }
 
 type Storage struct{

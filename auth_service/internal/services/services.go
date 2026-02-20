@@ -8,7 +8,7 @@ import (
 )
 
 type UserOperations interface {
-	CreateUser()
+	CreateUser(username string, email string, password string) (int64, error)
 }
 
 type Service struct {

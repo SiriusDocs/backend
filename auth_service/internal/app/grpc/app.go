@@ -1,7 +1,6 @@
 package grpcapp
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net"
@@ -27,8 +26,8 @@ func New(log *slog.Logger, service *services.Service, port int) *App {
 
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
-			logging.PayloadReceived, // логирование тела входящего запроса
-			logging.PayloadSent,     // логирование тела исходящего ответа
+			logging.StartCall,  // ← только метаданные вызова
+			logging.FinishCall, // ← результат (код, время)
 		),
 	}
 
@@ -53,6 +52,7 @@ func New(log *slog.Logger, service *services.Service, port int) *App {
 	gRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
         recovery.UnaryServerInterceptor(recoveryOpts...), // перехват паник
         logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...), // логирование запросов/ответов
+		PayloadRedactInterceptor(log), // безопасный логгер payload'ов
 	))
 
 	// Регистрируем наш gRPC-сервис Auth, об этом будет ниже
@@ -66,14 +66,6 @@ func New(log *slog.Logger, service *services.Service, port int) *App {
 		gRPCServer: gRPCServer,
 		port:       port,
 	}
-}
-
-// InterceptorLogger adapts slog logger to interceptor logger.
-// This code is simple enough to be copied and not imported.
-func InterceptorLogger(l *slog.Logger) logging.Logger {
-    return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
-        l.Log(ctx, slog.Level(lvl), msg, fields...)
-    })
 }
 
 func (a *App) MustRun() {

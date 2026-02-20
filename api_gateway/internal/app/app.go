@@ -41,7 +41,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	router := transport.NewRouter(cfg)
 	apiGroup := router.Group("/")
 
-	authHndlr := authHandler.New(log, authService)
+	authHndlr := authHandler.New(log, authService, &cfg.Clients.AuthService)
 	authHndlr.RegisterRoutes(apiGroup)
 
 	// docHndlr := docHandler.New(log, documentService)

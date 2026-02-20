@@ -8,6 +8,7 @@ import (
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/services"
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/storage"
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/auth_service/internal/storage/postgres"
+		_ "github.com/lib/pq"
 )
 
 type App struct {

@@ -21,6 +21,7 @@ type UsersServer struct {
 type AuthServer interface {
 	Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error)
 	Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error)
+	GetNewTokens(ctx context.Context, in *pb.TokensRequest) (*pb.TokenResponce, error)
 }
 
 func Registered(gRPCServer *grpc.Server, Service services.UserOperations) {
@@ -51,7 +52,6 @@ func (u *UsersServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.Login
 	}
 	_, tokens, err := u.services.GenerateTokens(ctx, in.Email, in.Password)
 	if err != nil {
-		fmt.Println(err)
 		if errors.Is(err, domain.ErrInsertToken) || errors.Is(err, domain.ErrInvalidToken) || errors.Is(err, domain.ErrTokenNotFound) {
 			return nil, status.Error(codes.Internal, err.Error())
 		} else if errors.Is(err, domain.ErrUserNotFound) {
@@ -60,6 +60,26 @@ func (u *UsersServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.Login
 		return nil, status.Error(codes.Internal, "unexpected error")
 	}
 	return &pb.LoginResponse{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+	}, nil
+}
+
+func (u *UsersServer) GetNewTokens(ctx context.Context, in *pb.TokensRequest) (*pb.TokenResponce, error) {
+	if in.RefreshToken == "" {
+		return nil, status.Error(codes.InvalidArgument, "all fields are required")
+	}
+	tokens, err := u.services.RefreshToken(ctx, in.RefreshToken)
+	if err != nil {
+		if errors.Is(err, domain.ErrInsertToken) || errors.Is(err, domain.ErrInvalidToken) || errors.Is(err, domain.ErrTokenNotFound) {
+			return nil, status.Error(codes.Internal, err.Error())
+		} else if errors.Is(err, domain.ErrUserNotFound) {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		fmt.Println(err)
+		return nil, status.Error(codes.Internal, "unexpected error")
+	}
+	return &pb.TokenResponce{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}, nil

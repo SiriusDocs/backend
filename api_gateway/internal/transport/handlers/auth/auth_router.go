@@ -27,5 +27,6 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		authGroup.POST("/sign-up", h.signUp)
 		authGroup.POST("/sign-in", h.signIn)
+		authGroup.POST("/refresh", h.refreshToken)
 	}
 }

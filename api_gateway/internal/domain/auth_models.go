@@ -30,3 +30,12 @@ type LoginResponse struct {
 	Status string        `json:"status" example:"success"`
 	Data   TokenResponse `json:"data"`
 }
+
+type TokensRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type TokensResponse struct {
+	Status string        `json:"status" example:"success"`
+	Data   TokenResponse `json:"data"`
+}

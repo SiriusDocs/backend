@@ -15,6 +15,58 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/refresh": {
+            "post": {
+                "description": "After the access token expires (15 minutes), you need to send a request to update the tokens. The request body must have a refresh token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Request new tokens",
+                "parameters": [
+                    {
+                        "description": "refresh token",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.TokensRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful login with tokens",
+                        "schema": {
+                            "$ref": "#/definitions/domain.TokensResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    },
+                    "401": {
+                        "description": "Incorrect password or email",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/sign-in": {
             "post": {
                 "description": "Authenticates a user and returns access and refresh tokens",
@@ -185,6 +237,26 @@ const docTemplate = `{
                 },
                 "refresh_token": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.TokensRequest": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.TokensResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/domain.TokenResponse"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

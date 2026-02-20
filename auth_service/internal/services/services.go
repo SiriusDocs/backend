@@ -13,6 +13,7 @@ import (
 type UserOperations interface {
 	CreateUser(ctx context.Context, username string, email string, password string) (int64, error)
 	GenerateTokens(ctx context.Context, email string, password string) (int64, domain.Tokens, error)
+	RefreshToken(ctx context.Context, refreshToken string) (domain.Tokens, error)
 }
 
 type Service struct {

@@ -12,7 +12,5 @@ gen-auth:
 	--go_out=pkg/api/ --go_opt=paths=source_relative \
 	--go-grpc_out=pkg/api/ --go-grpc_opt=paths=source_relative
 
-swagger-gen:
-	swag init -g cmd/app/main.go
 
 

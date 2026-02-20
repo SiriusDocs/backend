@@ -75,3 +75,34 @@ func (h *Handler) signIn(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"access_token": resp.AccessToken, "refresh_token": resp.RefreshToken})
 }
+
+// @Summary      Request new tokens
+// @Description  After the access token expires (15 minutes), you need to send a request to update the tokens. The request body must have a refresh token.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        input body domain.TokensRequest true "refresh token"
+// @Success      200  {object}  domain.TokensResponse "Successful login with tokens"
+// @Failure      400  {object}  response.ErrorResponseMes "Validation error"
+// @Failure      401  {object}  response.ErrorResponseMes "Incorrect password or email"
+// @Failure      500  {object}  response.ErrorResponseMes "Internal server error"
+// @Router       /auth/refresh [post]
+func (h *Handler) refreshToken(c *gin.Context) {
+	var input domain.TokensRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.client.Timeout)
+	defer cancel()
+
+	resp, err := h.service.GetNewTokens(ctx,&auth.TokensRequest{
+		RefreshToken: input.RefreshToken,
+	})
+
+	if err != nil {
+		response.ParseGRPCError(c, h.log, err, "get new tokens")
+		return
+	}
+	response.Success(c, gin.H{"access_token": resp.AccessToken, "refresh_token": resp.RefreshToken})
+}

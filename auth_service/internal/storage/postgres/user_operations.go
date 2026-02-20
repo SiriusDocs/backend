@@ -53,44 +53,41 @@ func (u *UserOperationsPostgres) GetUser(ctx context.Context, email string, pass
 }
 
 func (u *UserOperationsPostgres) SetSession(ctx context.Context, userId int64, session tokenmanager.Session) error {
-	var num int
-	var token sql.NullString
+	// Используем ExecContext, так как нам не нужно возвращать данные, только проверить ошибку
+	// ON CONFLICT (user_id) означает: "Если запись с таким user_id уже есть..."
+	// DO UPDATE SET ... означает: "...то обнови поля refresh_token и expires_in"
+	
+	query := fmt.Sprintf(`
+		INSERT INTO %s (user_id, refresh_token, expires_in) 
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id) 
+		DO UPDATE SET 
+			refresh_token = EXCLUDED.refresh_token, 
+			expires_in = EXCLUDED.expires_in
+	`, refreshSessionsTable)
 
-	query := fmt.Sprintf("SELECT refresh_token FROM %s WHERE user_id=$1", refreshSessionsTable)
-	_ = u.db.GetContext(ctx, &token, query, userId)
-	// if err != nil {
-	// 	if errors.Is(err, sql.ErrNoRows) {
-	// 		return domain.ErrTokenNotFound
-	// 	}
-	// }
-	now := time.Now()
+	_, err := u.db.ExecContext(ctx, query, userId, session.RefreshToken, session.ExpiresAt)
+	
+	if err != nil {
+		// Логируем ошибку, чтобы понимать, что именно пошло не так
+		return fmt.Errorf("failed to set session: %w", domain.ErrInsertToken) // или просто err
+	}
 
-	if token.Valid {
-		query := fmt.Sprintf("UPDATE %s SET refresh_token=$1, expires_in=$2, created_at=$3 WHERE user_id=$4 RETURNING 1", refreshSessionsTable)
-		if err := u.db.GetContext(ctx, &num, query, session.RefreshToken, session.ExpiresAt, now, userId); err != nil {
-			return domain.ErrInsertToken
-		}
-	}
-	query = fmt.Sprintf("INSERT INTO %s (user_id, refresh_token, expires_in) VALUES ($1, $2, $3) RETURNING 1", refreshSessionsTable)
-	if err := u.db.GetContext(ctx, &num, query, userId, session.RefreshToken, session.ExpiresAt); err != nil {
-		return domain.ErrInsertToken
-	}
 	return nil
 }
 
 func (u *UserOperationsPostgres) IsTokenValid(ctx context.Context, refreshToken string) (int64, error) {
-	var user struct {
-		id       sql.NullInt64  `db:"user_id"`
-		// userType sql.NullString `db:"user_type"`
-	}
+	var userID int64
 	now := time.Now()
-	query := fmt.Sprintf("SELECT r.user_id, FROM %s r JOIN %s u ON u.id = r.user_id WHERE r.refresh_token=$1 AND r.expires_in>$2", refreshSessionsTable, usersTable)
-	row := u.db.QueryRow(query, refreshToken, now)
-	if err := row.Scan(&user.id,); err != nil {
-		if !user.id.Valid{
+	query := fmt.Sprintf("SELECT r.user_id FROM %s r JOIN %s u ON u.id = r.user_id WHERE r.refresh_token=$1 AND r.expires_in>$2", refreshSessionsTable, usersTable)
+
+	row := u.db.QueryRowContext(ctx, query, refreshToken, now)
+
+	if err := row.Scan(&userID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, domain.ErrInvalidToken
 		}
-		return 0, err
+		return 0, fmt.Errorf("db error: %w", err)
 	}
-	return user.id.Int64, nil
+	return userID, nil
 }

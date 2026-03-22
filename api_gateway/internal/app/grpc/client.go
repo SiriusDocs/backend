@@ -31,19 +31,27 @@ func loggingInterceptor(log *slog.Logger) grpc.UnaryClientInterceptor {
 
 // NewClient — универсальная фабрика для создания gRPC-соединений
 func NewClient(addr string, log *slog.Logger) (*grpc.ClientConn, error) {
-    
-    opts := []grpc.DialOption{
-        // Пока используем insecure. В проде тут будут TLS сертификаты
-        grpc.WithTransportCredentials(insecure.NewCredentials()),
-        grpc.WithChainUnaryInterceptor(
-            loggingInterceptor(log),
-        ),
-    }
+	// Проверка на пустой адрес
+	if addr == "" {
+		return nil, fmt.Errorf("grpc address is empty")
+	}
 
-    conn, err := grpc.NewClient(addr, opts...)
-    if err != nil {
-        return nil, fmt.Errorf("failed to create gRPC client for %s: %w", addr, err)
-    }
+	// Таймаут на подключение
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-    return conn, nil
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(
+			loggingInterceptor(log),
+		),
+		grpc.WithBlock(), // Ждём реального подключения
+	}
+
+	conn, err := grpc.DialContext(ctx, addr, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to %s: %w", addr, err)
+	}
+
+	return conn, nil
 }

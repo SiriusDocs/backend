@@ -12,7 +12,7 @@ type AuthService interface {
 }
 
 type authService struct {
-    authClient auth.AuthClient // gRPC сгенерированный клиент
+    authClient auth.AuthClient
 }
 
 func NewAuthService(client auth.AuthClient) AuthService {

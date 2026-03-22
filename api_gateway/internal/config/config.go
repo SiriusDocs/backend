@@ -25,6 +25,7 @@ type HTTPServer struct {
 
 type ClientsConfig struct {
 	AuthService GRPCClient `yaml:"auth_service"`
+	TempService GRPCClient `yaml:"temp_service"`
 	// DocumentService, ChahgesService и т.д.
 }
 

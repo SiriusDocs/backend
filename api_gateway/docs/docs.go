@@ -164,6 +164,103 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/temp/files/status/{task_id}": {
+            "get": {
+                "description": "Возвращает статус обработки. Если готово — возвращает результат парсинга.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "templates"
+                ],
+                "summary": "Проверка статуса задачи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID задачи",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат парсинга",
+                        "schema": {
+                            "$ref": "#/definitions/domain.TaskResultResponse"
+                        }
+                    },
+                    "202": {
+                        "description": "Задача в процессе",
+                        "schema": {
+                            "$ref": "#/definitions/domain.TaskStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    }
+                }
+            }
+        },
+        "/temp/files/upload": {
+            "post": {
+                "description": "Принимает файл, отправляет его в gRPC сервис и возвращает ID задачи.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "templates"
+                ],
+                "summary": "Загрузка файла для обработки",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Файл для парсинга",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/domain.UploadFileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -234,6 +331,19 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.TaskResultResponse": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "domain.TaskStatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "processing"
+                }
+            }
+        },
         "domain.TokenResponse": {
             "type": "object",
             "properties": {
@@ -262,6 +372,15 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "domain.UploadFileResponse": {
+            "type": "object",
+            "properties": {
+                "task_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
             }
         },

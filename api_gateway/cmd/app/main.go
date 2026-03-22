@@ -21,7 +21,10 @@ func main(){
 	cfg := config.MustLoad()
 	logger := logger.SetupLogger(cfg.Env)
 
-	application := app.New(logger, cfg)
+	application, err := app.New(logger, cfg)
+	if err != nil {
+		panic(err)
+	}
 	go func() {
 		if err := application.HTTPServer.Run(); err != nil && err != http.ErrServerClosed {
 			panic(fmt.Sprintf("error occured while running http server: %s", err.Error()))

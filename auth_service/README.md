@@ -5,7 +5,7 @@
 `./configs/server/server.yaml`
 ```yaml
 auth_service:
-  port: 44044 # Порт, на котором висит gRPC сервер (мы его скоро запустим)
+  port: 44044
   timeout: 5s
   retries_count: 3
 ```

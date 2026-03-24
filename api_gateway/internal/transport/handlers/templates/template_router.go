@@ -28,7 +28,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		fileGroup := tempGroup.Group("/files")
 		{
 			fileGroup.POST("/upload", h.uploadFile)
-			fileGroup.POST("/status/:task_id", h.checkStatus)
+			fileGroup.GET("/status/:task_id", h.checkStatus)
 		}
 	}
 }

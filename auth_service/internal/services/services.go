@@ -25,3 +25,4 @@ func NewService(logger *slog.Logger, store *storage.Storage, manager *tokenmanag
 		UserOperations: users.NewUserOperations(logger, store.UserOperations, manager),
 	}
 }
+

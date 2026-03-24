@@ -2,9 +2,9 @@ package templates
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
+	"github.com/SiriusDocs/backend/api_gateway/internal/domain"
 	"github.com/SiriusDocs/backend/api_gateway/internal/lib/response"
 	"github.com/SiriusDocs/protos/gen/go/templates"
 	"github.com/gin-gonic/gin"
@@ -64,16 +64,16 @@ func (h *Handler) uploadFile(c *gin.Context) {
 }
 
 // @Summary      Проверка статуса задачи
-// @Description  Возвращает статус обработки. Если готово — возвращает результат парсинга.
+// @Description  Возвращает статус обработки. Если готово — возвращает JSON {"names": ["...", "..."]}
 // @Tags         templates
 // @Produce      json
 // @Param        task_id  path      string  true  "ID задачи"
-// @Success      200  {object}  domain.TaskResultResponse  "Результат парсинга"
-// @Success      202  {object}  domain.TaskStatusResponse  "Задача в процессе"
+// @Success      200  {object}  response.Response{data=domain.TaskResultNames}  "Результат: список имен"
+// @Success      202  {object}  response.Response{data=domain.TaskStatusResponse}  "В процессе"
 // @Failure      400  {object}  response.ErrorResponseMes
 // @Failure      404  {object}  response.ErrorResponseMes
 // @Failure      500  {object}  response.ErrorResponseMes
-// @Router       /temp/files/status/{task_id} [get]
+// @Router       /templates/status/{task_id} [get]
 func (h *Handler) checkStatus(c *gin.Context) {
 	taskID := c.Param("task_id")
 	if taskID == "" {
@@ -84,7 +84,8 @@ func (h *Handler) checkStatus(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.client.Timeout)
 	defer cancel()
 
-	statusResp, err := h.service.CheckStatus(ctx, &templates.StatusRequest{
+	// Вызываем сервис, получаем статус и список строк
+	status, names, err := h.service.CheckStatus(ctx, &templates.StatusRequest{
 		TaskId: taskID,
 	})
 
@@ -93,32 +94,27 @@ func (h *Handler) checkStatus(c *gin.Context) {
 		return
 	}
 
-	switch statusResp.Status {
+	switch status {
 	case "done":
-        if !json.Valid(statusResp.ResultData) {
-            response.ErrorResponse(c, http.StatusInternalServerError, "invalid json result from service")
-            return
-        }
-
-        c.JSON(http.StatusOK, response.Response{
-            Status: response.StatusSuccess,
-            Data:   json.RawMessage(statusResp.ResultData),
-        })
-        return
-
+		// Формируем итоговый JSON
+		// Структура будет: { "status": "success", "data": { "names": ["A", "B"] } }
+		c.JSON(http.StatusOK, response.Response{
+			Status: response.StatusSuccess,
+			Data: domain.TaskResultNames{
+				Names: names,
+			},
+		})
 
 	case "error":
 		response.ErrorResponse(c, http.StatusInternalServerError, "processing failed")
-		return
 
 	default:
 		// pending / processing
 		c.JSON(http.StatusAccepted, response.Response{
 			Status: response.StatusSuccess,
-			Data: StatusDTO{
-				Status: statusResp.Status,
+			Data: domain.TaskStatusResponse{
+				Status: status,
 			},
 		})
-		return
 	}
 }

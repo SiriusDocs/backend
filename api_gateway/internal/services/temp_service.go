@@ -4,12 +4,13 @@ import (
 	"context"
 	"io"
 
+	"github.com/SiriusDocs/protos/gen/go/templates"
 	temp "github.com/SiriusDocs/protos/gen/go/templates"
 )
 
 type TempService interface {
     UploadFile(ctx context.Context, filename string, fileReader io.Reader) (string, error)
-    CheckStatus(ctx context.Context, req *temp.StatusRequest)(*temp.StatusResponse, error)
+    CheckStatus(ctx context.Context, req *templates.StatusRequest) (string, []string, error)
 }
 
 type tempService struct {
@@ -68,6 +69,13 @@ func (t *tempService) UploadFile(ctx context.Context, filename string, fileReade
     return res.TaskId, nil
 }
 
-func (t *tempService) CheckStatus(ctx context.Context, req *temp.StatusRequest)(*temp.StatusResponse, error) {
-    return t.tempClient.CheckStatus(ctx, req)
+// CheckStatus - возвращает статус и список имен
+func (s *tempService) CheckStatus(ctx context.Context, req *templates.StatusRequest) (string, []string, error) {
+	resp, err := s.tempClient.CheckStatus(ctx, req)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// Возвращаем статус и слайс строк напрямую из gRPC ответа
+	return resp.Status, resp.Names, nil
 }

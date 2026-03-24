@@ -37,8 +37,8 @@ type GRPCClient struct {
 
 func MustLoad() *Config {
 	if err := godotenv.Load(); err != nil {
-			log.Print("No .env file found, falling back to environment variables")
-		}
+		log.Print("No .env file found, falling back to environment variables")
+	}
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is not set")

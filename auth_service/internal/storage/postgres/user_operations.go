@@ -69,8 +69,7 @@ func (u *UserOperationsPostgres) SetSession(ctx context.Context, userId int64, s
 	_, err := u.db.ExecContext(ctx, query, userId, session.RefreshToken, session.ExpiresAt)
 	
 	if err != nil {
-		// Логируем ошибку, чтобы понимать, что именно пошло не так
-		return fmt.Errorf("failed to set session: %w", domain.ErrInsertToken) // или просто err
+		return fmt.Errorf("failed to set session: %w", domain.ErrInsertToken)
 	}
 
 	return nil

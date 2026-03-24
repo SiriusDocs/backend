@@ -10,6 +10,7 @@ type TaskStatusResponse struct {
 	Status string `json:"status" example:"processing"`
 }
 
-// TaskResultResponse - ответ при успешном парсинге
-// Swagger не умеет описывать произвольный JSON, поэтому используем map
-type TaskResultResponse map[string]interface{}
+// TaskResultNames - итоговый результат (обертка для списка)
+type TaskResultNames struct {
+	Names []string `json:"names" example:"Ivan,Maria,Peter"`
+}

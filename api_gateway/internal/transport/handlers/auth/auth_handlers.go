@@ -68,7 +68,7 @@ func (h *Handler) signIn(c *gin.Context) {
 		Password: input.Password,
 		Email: input.Email,
 	})
-	
+
 	if err != nil {
 		response.ParseGRPCError(c, h.log, err, "login user")
 		return

@@ -73,7 +73,7 @@ func (h *Handler) uploadFile(c *gin.Context) {
 // @Failure      400  {object}  response.ErrorResponseMes
 // @Failure      404  {object}  response.ErrorResponseMes
 // @Failure      500  {object}  response.ErrorResponseMes
-// @Router       /templates/status/{task_id} [get]
+// @Router       /temp/files/status/{task_id} [get]
 func (h *Handler) checkStatus(c *gin.Context) {
 	taskID := c.Param("task_id")
 	if taskID == "" {

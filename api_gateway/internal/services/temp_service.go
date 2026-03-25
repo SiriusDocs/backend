@@ -11,6 +11,7 @@ import (
 type TempService interface {
     UploadFile(ctx context.Context, filename string, fileReader io.Reader) (string, error)
     CheckStatus(ctx context.Context, req *templates.StatusRequest) (string, []string, error)
+    CreateParams(ctx context.Context, taskID string, params map[string]string) (string, error)
 }
 
 type tempService struct {
@@ -75,7 +76,18 @@ func (s *tempService) CheckStatus(ctx context.Context, req *templates.StatusRequ
 	if err != nil {
 		return "", nil, err
 	}
-
 	// Возвращаем статус и слайс строк напрямую из gRPC ответа
 	return resp.Status, resp.Names, nil
+}
+
+func (s *tempService) CreateParams(ctx context.Context, taskID string, params map[string]string) (string, error) {
+	resp, err := s.tempClient.CreateTemplateParams(ctx, &templates.CreateParamsRequest{
+		TaskId: taskID,
+		Params: params,
+	})
+
+	if err != nil {
+		return "", err 
+	}
+	return resp.TemplateId, nil
 }

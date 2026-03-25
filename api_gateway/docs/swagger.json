@@ -159,7 +159,7 @@
         },
         "/temp/files/status/{task_id}": {
             "get": {
-                "description": "Возвращает статус обработки. Если готово — возвращает результат парсинга.",
+                "description": "Возвращает статус обработки. Если готово — возвращает JSON {\"names\": [\"...\", \"...\"]}",
                 "produces": [
                     "application/json"
                 ],
@@ -178,15 +178,39 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Результат парсинга",
+                        "description": "Результат: список имен",
                         "schema": {
-                            "$ref": "#/definitions/domain.TaskResultResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.TaskResultNames"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "202": {
-                        "description": "Задача в процессе",
+                        "description": "В процессе",
                         "schema": {
-                            "$ref": "#/definitions/domain.TaskStatusResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.TaskStatusResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -253,9 +277,101 @@
                     }
                 }
             }
+        },
+        "/temp/params/create": {
+            "post": {
+                "description": "Принимает ID задачи и список переменных (имя: тип) для создания структуры данных шаблона.\n// Строки\n\"string\": \"TEXT\",\n\"text\":   \"TEXT\",\n\n// Числа\n\"int\":     \"INTEGER\",\n\"integer\": \"INTEGER\",\n\"number\":  \"INTEGER\",\n\n// Дробные\n\"float\":  \"DOUBLE PRECISION\",\n\"double\": \"DOUBLE PRECISION\",\n\n// Булевы\n\"bool\":    \"BOOLEAN\",\n\"boolean\": \"BOOLEAN\",\n\n// Даты\n\"date\":      \"DATE\",\n\"datetime\":  \"TIMESTAMP\",\n\"timestamp\": \"TIMESTAMP\",",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "templates"
+                ],
+                "summary": "Создание параметров шаблона (схемы таблицы)",
+                "parameters": [
+                    {
+                        "description": "Конфигурация параметров",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateParamsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное создание",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.CreateParamsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации входных данных",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseMes"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "domain.CreateParamsRequest": {
+            "type": "object",
+            "required": [
+                "params",
+                "task_id"
+            ],
+            "properties": {
+                "params": {
+                    "description": "swaggertype:\"object,string\" подсказывает сваггеру, что это мапа строк",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "client_name": "string",
+                        "contract_sum": "int",
+                        "is_active": "boolean"
+                    }
+                },
+                "task_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "domain.CreateParamsResponse": {
+            "type": "object",
+            "properties": {
+                "template_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
         "domain.CreateUserResponse": {
             "type": "object",
             "properties": {
@@ -323,9 +439,16 @@
                 }
             }
         },
-        "domain.TaskResultResponse": {
+        "domain.TaskResultNames": {
             "type": "object",
-            "additionalProperties": true
+            "properties": {
+                "names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "domain.TaskStatusResponse": {
             "type": "object",
@@ -386,6 +509,18 @@
                 "status": {
                     "type": "string",
                     "example": "error"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         }

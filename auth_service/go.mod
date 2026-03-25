@@ -21,7 +21,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/SiriusDocs/protos v1.0.3
+	github.com/SiriusDocs/protos v1.1.5
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/ilyakaznacheev/cleanenv v1.5.0

@@ -22,7 +22,7 @@ func New(logger *slog.Logger, cfg *config.Config) *App {
 		panic(err)
 	}
 
-	storage := storage.NewPostgresStorage(db, logger)
+	storage := storage.NewPostgresStorage(db)
 	service := templates.NewService(logger, storage)
 	grpcApp := grpcapp.New(logger, service, cfg.GRPC.Port)
 

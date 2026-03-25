@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -34,7 +33,7 @@ type TemplateService struct {
 	store storage.TaskOperations
 }
 
-func NewTemplateService(log *slog.Logger, store storage.TaskOperations) *TemplateService {
+func NewTasksService(log *slog.Logger, store storage.TaskOperations) *TemplateService {
 	return &TemplateService{
 		log:   log,
 		store: store,
@@ -55,7 +54,7 @@ func (s *TemplateService) UploadAndStartTask(ctx context.Context, filename strin
 	// 1. Валидация файла
 	if err := s.validateData(filename, fileData); err != nil {
 		log.Warn("file validation failed", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return "", err
 	}
 
 	// 2. Генерация ID
@@ -64,7 +63,7 @@ func (s *TemplateService) UploadAndStartTask(ctx context.Context, filename strin
 	// 3. Создание записи в БД
 	if err := s.store.CreateTask(ctx, taskID, filename); err != nil {
 		log.Error("failed to create task in db", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return "", err
 	}
 
 	log.Info("task created successfully", slog.String("task_id", taskID))
@@ -87,14 +86,10 @@ func (s *TemplateService) CheckTaskStatus(ctx context.Context, taskID string) (s
 	// 1. Получение задачи из БД
 	task, err := s.store.GetTask(ctx, taskID)
 	if err != nil {
-		if errors.Is(err, domain.ErrTaskNotFound) {
-			log.Warn("task not found")
-			return "", nil, fmt.Errorf("%s: %w", op, domain.ErrTaskNotFound)
-		}
-		log.Error("failed to get task from storage", slog.String("error", err.Error()))
-		return "", nil, fmt.Errorf("%s: %w", op, err)
+		log.Warn("failed to get task", slog.String("error", err.Error()))
+		return "", nil, err // NotFound или Internal — уже типизировано
 	}
-	
+
 	// СЦЕНАРИЙ 1: Задача завершилась с ошибкой (валидация, парсер упал)
 	if task.FileStatus == domain.TaskStatusError {
 		errMsg := "unknown error"
@@ -102,7 +97,7 @@ func (s *TemplateService) CheckTaskStatus(ctx context.Context, taskID string) (s
 			errMsg = *task.ErrorMessage
 		}
 		// Возвращаем статус "error" И саму ошибку
-		return domain.TaskStatusError, nil, errors.New(errMsg)
+		return domain.TaskStatusError, nil, domain.Validation(op, errMsg)
 	}
 	// СЦЕНАРИЙ 2: Задача еще не готова
 	if task.FileStatus != domain.TaskStatusDone {
@@ -114,7 +109,7 @@ func (s *TemplateService) CheckTaskStatus(ctx context.Context, taskID string) (s
 	if len(task.ResultData) > 0 {
 		if err := json.Unmarshal(task.ResultData, &names); err != nil {
 			log.Error("data corruption: failed to unmarshal result data", slog.String("error", err.Error()))
-			return domain.TaskStatusError, nil, fmt.Errorf("%s: data corruption", op)
+			return "", nil, domain.Internal(op, "failed to read task results", err)
 		}
 	}
 
@@ -158,7 +153,7 @@ func (s *TemplateService) processMock(taskID string, _ []byte) {
 	resultJSON, err := json.Marshal(mockNames)
 	if err != nil {
 		log.Error("failed to marshal mock results", slog.String("error", err.Error()))
-		
+
 		// Пытаемся записать ошибку в БД
 		if err := s.store.SetError(ctx, taskID, "internal parser error"); err != nil {
 			log.Error("failed to save error status to db", slog.String("error", err.Error()))
@@ -182,10 +177,10 @@ func (s *TemplateService) validateData(filename string, data []byte) error {
 
 	// 1. Проверка размера
 	if len(data) < MinFileSize {
-		return fmt.Errorf("%s: file is too small or empty", op)
+		return domain.Validation(op, "file is too small or empty")
 	}
 	if len(data) > MaxFileSize {
-		return fmt.Errorf("%s: file size exceeds limit of %d bytes", op, MaxFileSize)
+		return domain.Validation(op, fmt.Sprintf("file size exceeds limit of %d MB", MaxFileSize/(1024*1024)))
 	}
 
 	// 2. Проверка расширения
@@ -193,29 +188,25 @@ func (s *TemplateService) validateData(filename string, data []byte) error {
 
 	switch ext {
 	case ".rtf":
-		if err := s.validateRTF(data); err != nil {
-			return fmt.Errorf("%s: %w", op, err)
-		}
-		return nil
+		return s.validateRTF(data)
 	case ".docx", ".odt":
-		if err := s.validateZipBased(data, ext); err != nil {
-			return fmt.Errorf("%s: %w", op, err)
-		}
-		return nil
+		return s.validateZipBased(data, ext)
 	default:
-		return fmt.Errorf("%s: unsupported file extension: %s", op, ext)
+		return domain.Validation(op, fmt.Sprintf("unsupported file format: %s (allowed: .rtf, .docx, .odt)", ext))
 	}
 }
 
 // validateRTF проверяет сигнатуру и базовую структуру RTF
 func (s *TemplateService) validateRTF(data []byte) error {
+	const op = "TemplateService.validateRTF"
+
 	if !bytes.HasPrefix(data, magicRTF) {
-		return errors.New("invalid file content: signature does not match RTF format")
+		return domain.Validation(op, "file content does not match RTF format")
 	}
 
 	trimmed := bytes.TrimRight(data, " \r\n\t\x00")
 	if len(trimmed) == 0 || trimmed[len(trimmed)-1] != '}' {
-		return errors.New("corrupted RTF file: missing closing brace '}'")
+		return domain.Validation(op, "corrupted RTF file")
 	}
 
 	return nil
@@ -223,13 +214,15 @@ func (s *TemplateService) validateRTF(data []byte) error {
 
 // validateZipBased проверяет файлы, являющиеся ZIP-архивами (.docx, .odt)
 func (s *TemplateService) validateZipBased(data []byte, ext string) error {
+	const op = "TemplateService.validateZipBased"
+
 	if !bytes.HasPrefix(data, magicZIP) {
-		return fmt.Errorf("invalid file content: signature does not match %s format", ext)
+		return domain.Validation(op, fmt.Sprintf("file content does not match %s format", ext))
 	}
 
 	reader := bytes.NewReader(data)
 	if _, err := zip.NewReader(reader, int64(len(data))); err != nil {
-		return fmt.Errorf("corrupted file structure: %w", err)
+		return domain.Validation(op, fmt.Sprintf("corrupted %s file", ext))
 	}
 
 	return nil

@@ -16,7 +16,7 @@ require (
 )
 
 require (
-	github.com/SiriusDocs/protos v1.1.2
+	github.com/SiriusDocs/protos v1.1.5
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/ilyakaznacheev/cleanenv v1.5.0

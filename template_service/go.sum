@@ -3,6 +3,8 @@ github.com/BurntSushi/toml v1.2.1 h1:9F2/+DoOYIOksmaJFPw1tGFy1eDnIJXg+UHjuD8lTak
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/SiriusDocs/protos v1.1.2 h1:THnBFsIqxeiqGcd+emYzRNXOFvdrFNoqvJOHFf8eUqU=
 github.com/SiriusDocs/protos v1.1.2/go.mod h1:ziEOV/aXacjzTFx4u/AxvqLSWCUunEcC6gteJLrrOIU=
+github.com/SiriusDocs/protos v1.1.5 h1:wvv9SH1ZNC/VIQe4+Q85G9vBB7VnOKWMR0EY3dE0MNc=
+github.com/SiriusDocs/protos v1.1.5/go.mod h1:ziEOV/aXacjzTFx4u/AxvqLSWCUunEcC6gteJLrrOIU=
 github.com/go-sql-driver/mysql v1.8.1/go.mod h1:wEBSXgmK//2ZFJyE+qWnIsVGmvmEKlqwuVSjsCm7DZg=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

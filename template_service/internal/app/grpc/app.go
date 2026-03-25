@@ -56,7 +56,7 @@ func New(log *slog.Logger, service *templates.Service, port int) *App {
 	))
 
 	// Регистрируем наш gRPC-сервис Auth, об этом будет ниже
-	temp.Registered(gRPCServer, service.TaskOperations)
+	temp.Registered(gRPCServer, service.TaskOperations, service.ParamsOperations, log)
 	// регистрация остальных grpc-сервисов (из proto-контракта)
 	// . . .
 	// . . .

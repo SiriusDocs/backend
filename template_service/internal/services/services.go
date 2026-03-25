@@ -17,12 +17,19 @@ type TaskOperations interface {
 	CheckTaskStatus(ctx context.Context, taskID string) (string, []string, error)
 }
 
+type ParamsOperations interface {
+	// CreateTemplate создает таблицу в БД на основе параметров
+	CreateTemplate(ctx context.Context, taskID string, params map[string]string) (string, error)
+}
+
 type Service struct {
 	TaskOperations
+	ParamsOperations
 }
 
 func NewService(log *slog.Logger, store *storage.Storage) *Service {
 	return &Service{
-		TaskOperations: temp.NewTemplateService(log, store.TaskOperations),
+		TaskOperations: temp.NewTasksService(log, store.TaskOperations),
+		ParamsOperations: temp.NewParamsService(log, store.TemplateOperations, store.TaskOperations),
 	}
 }

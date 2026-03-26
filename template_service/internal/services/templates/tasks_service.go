@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -27,6 +28,8 @@ var (
 	magicRTF = []byte("{\\rtf")               // Сигнатура RTF
 	magicZIP = []byte{0x50, 0x4B, 0x03, 0x04} // Сигнатура ZIP (docx, odt)
 )
+
+var VarRegexRTF = regexp.MustCompile(`{\\field\\fldlock{\\\*\\fldinst  DOCVARIABLE (.*?) }{\\fldrslt (.*?)}}`)
 
 type TemplateService struct {
 	log   *slog.Logger
@@ -69,7 +72,7 @@ func (s *TemplateService) UploadAndStartTask(ctx context.Context, filename strin
 	log.Info("task created successfully", slog.String("task_id", taskID))
 
 	// 4. Запуск парсера в фоне
-	go s.processMock(taskID, fileData)
+	go s.parseRTF(taskID, fileData)
 
 	return taskID, nil
 }
@@ -114,6 +117,64 @@ func (s *TemplateService) CheckTaskStatus(ctx context.Context, taskID string) (s
 	}
 
 	return task.FileStatus, names, nil
+}
+
+// Парсинг RTF файлов - возвращает список id'шников всех переменных в документе
+func (s *TemplateService) parseRTF(taskID string, data []byte) {
+	const op = "TemplateService.parseRTF"
+
+	// Создаем логгер для этой горутины
+	log := s.log.With(
+		slog.String("op", op),
+		slog.String("task_id", taskID),
+	)
+
+	// Background context, т.к. родительский контекст запроса уже завершен
+	ctx := context.Background()
+
+	log.Debug("start processing task")
+
+	// 1. Ставим статус Processing
+	if err := s.store.SetStatus(ctx, taskID, domain.TaskStatusProcessing); err != nil {
+		log.Error("failed to set status processing", slog.String("error", err.Error()))
+		return
+	}
+
+	// --- САМ ПАРСЕР ---
+	// TODO: подумать, может стоит возвращать map'у
+	//       где значения это описание переменных, а не список
+	keys := make([]string, 0)
+	vars := make(map[string]string)
+
+	// TODO: полуболванка, стоит перерассмотреть как мы это делаем
+	matches := VarRegexRTF.FindAllSubmatch(data, -1)
+	for _, v := range matches {
+		id := string(v[1])
+		desc := string(v[2])
+
+		vars[id] = desc
+		keys = append(keys, id)
+	}
+
+	resultJSON, err := json.Marshal(keys)
+	if err != nil {
+		log.Error("failed to marshal parse results", slog.String("error", err.Error()))
+
+		// Пытаемся записать ошибку в БД
+		if err := s.store.SetError(ctx, taskID, "internal parser error"); err != nil {
+			log.Error("failed to save error status to db", slog.String("error", err.Error()))
+		}
+		return
+	}
+	// ------------------------
+
+	// 2. Сохраняем результат
+	if err := s.store.SetResult(ctx, taskID, resultJSON); err != nil {
+		log.Error("failed to set task result", slog.String("error", err.Error()))
+		return
+	}
+
+	log.Info("task processing completed successfully")
 }
 
 // processMock — заглушка работы парсера (запускается в горутине)

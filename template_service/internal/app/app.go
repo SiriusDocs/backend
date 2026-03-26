@@ -23,7 +23,7 @@ func New(logger *slog.Logger, cfg *config.Config) *App {
 	}
 
 	storage := storage.NewPostgresStorage(db)
-	service := templates.NewService(logger, storage)
+	service := templates.NewService(logger, storage, cfg.Tasks)
 	grpcApp := grpcapp.New(logger, service, cfg.GRPC.Port)
 
 	return &App{GRPCServer: grpcApp}

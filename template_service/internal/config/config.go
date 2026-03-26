@@ -13,6 +13,7 @@ type Config struct {
 	Env            string     `yaml:"env" env-default:"local"` // текущее окружение: local, dev, prod
 	GRPC           GRPCConfig `yaml:"temp_service"`
 	Db             DBConfig
+	Tasks          TasksConfig
 	MigrationsPath string // путь до директории с миграциями
 }
 
@@ -28,6 +29,11 @@ type DBConfig struct {
 type GRPCConfig struct {
 	Port    int           `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"` // таймаут обработки запросов
+}
+
+type TasksConfig struct {
+	MaxFileSize int `yaml:"max_file_size" env-default:"10485760"` // 10 MB (10 * 1024 * 1024)
+	MinFileSize int `yaml:"min_file_size" env-default:"100"`
 }
 
 func MustLoad() *Config {

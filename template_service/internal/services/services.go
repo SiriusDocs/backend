@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/SiriusDocs/backend/template_service/internal/config"
 	temp "github.com/SiriusDocs/backend/template_service/internal/services/templates"
 	"github.com/SiriusDocs/backend/template_service/internal/storage"
 )
@@ -12,7 +13,7 @@ import (
 type TaskOperations interface {
 	// UploadAndStartTask принимает имя файла и данные, создает задачу и запускает парсинг в фоне
 	UploadAndStartTask(ctx context.Context, filename string, fileData []byte) (string, error)
-	
+
 	// CheckTaskStatus возвращает статус задачи и результат (список имен), если готов
 	CheckTaskStatus(ctx context.Context, taskID string) (string, []string, error)
 }
@@ -27,9 +28,10 @@ type Service struct {
 	ParamsOperations
 }
 
-func NewService(log *slog.Logger, store *storage.Storage) *Service {
+func NewService(log *slog.Logger, store *storage.Storage, cfg config.TasksConfig) *Service {
 	return &Service{
-		TaskOperations: temp.NewTasksService(log, store.TaskOperations),
+		TaskOperations:   temp.NewTasksService(log, store.TaskOperations, cfg),
 		ParamsOperations: temp.NewParamsService(log, store.TemplateOperations, store.TaskOperations),
 	}
 }
+

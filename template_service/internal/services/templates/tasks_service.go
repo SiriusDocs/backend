@@ -13,15 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SiriusDocs/backend/template_service/internal/config"
 	"github.com/SiriusDocs/backend/template_service/internal/domain"
 	"github.com/SiriusDocs/backend/template_service/internal/storage"
 	"github.com/google/uuid"
-)
-
-// TODO: вынести в конфиг
-const (
-	MaxFileSize = 10 * 1024 * 1024 // 10 MB
-	MinFileSize = 100              // 100 bytes
 )
 
 var (
@@ -34,12 +29,14 @@ var VarRegexRTF = regexp.MustCompile(`{\\field\\fldlock{\\\*\\fldinst  DOCVARIAB
 type TemplateService struct {
 	log   *slog.Logger
 	store storage.TaskOperations
+	cfg   config.TasksConfig
 }
 
-func NewTasksService(log *slog.Logger, store storage.TaskOperations) *TemplateService {
+func NewTasksService(log *slog.Logger, store storage.TaskOperations, cfg config.TasksConfig) *TemplateService {
 	return &TemplateService{
 		log:   log,
 		store: store,
+		cfg:   cfg,
 	}
 }
 
@@ -237,11 +234,11 @@ func (s *TemplateService) validateData(filename string, data []byte) error {
 	const op = "TemplateService.validateData"
 
 	// 1. Проверка размера
-	if len(data) < MinFileSize {
+	if len(data) < s.cfg.MinFileSize {
 		return domain.Validation(op, "file is too small or empty")
 	}
-	if len(data) > MaxFileSize {
-		return domain.Validation(op, fmt.Sprintf("file size exceeds limit of %d MB", MaxFileSize/(1024*1024)))
+	if len(data) > s.cfg.MaxFileSize {
+		return domain.Validation(op, fmt.Sprintf("file size exceeds limit of %d MB", s.cfg.MaxFileSize/(1024*1024)))
 	}
 
 	// 2. Проверка расширения

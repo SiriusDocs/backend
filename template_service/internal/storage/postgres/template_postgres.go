@@ -65,7 +65,7 @@ func (r *TemplateOperationsPostgres) CreateTemplateTable(ctx context.Context, te
 	}
 	sort.Strings(keys)
 
-		for _, colName := range keys {
+	for _, colName := range keys {
 		userType := columns[colName]
 
 		// Защитный слой (основная валидация — в сервисе)

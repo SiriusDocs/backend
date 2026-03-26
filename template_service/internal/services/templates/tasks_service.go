@@ -140,7 +140,6 @@ func (s *TemplateService) parseRTF(taskID string, data []byte) {
 	// --- САМ ПАРСЕР ---
 	// TODO: подумать, может стоит возвращать map'у
 	//       где значения это описание переменных, а не список
-	keys := make([]string, 0)
 	vars := make(map[string]string)
 
 	// TODO: полуболванка, стоит перерассмотреть как мы это делаем
@@ -150,7 +149,11 @@ func (s *TemplateService) parseRTF(taskID string, data []byte) {
 		desc := string(v[2])
 
 		vars[id] = desc
-		keys = append(keys, id)
+	}
+
+	keys := make([]string, 0, len(vars))
+	for k := range vars {
+		keys = append(keys, k)
 	}
 
 	resultJSON, err := json.Marshal(keys)

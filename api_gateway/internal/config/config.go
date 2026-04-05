@@ -13,6 +13,7 @@ type Config struct {
 	Env        string        `yaml:"env" env-default:"local"`
 	HTTPServer HTTPServer    `yaml:"http_server"`
 	Clients    ClientsConfig `yaml:"clients"`
+	JWTSecret string
 }
 
 type HTTPServer struct {
@@ -43,12 +44,17 @@ func MustLoad() *Config {
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is not set")
 	}
+	JWTSecret := os.Getenv("SIGNING_KEY")
+	if JWTSecret == "" {
+		log.Fatal("SIGNING_KEY is not set")
+	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Fatalf("config file does not exist: %s", configPath)
 	}
 
 	var cfg Config
+	cfg.JWTSecret = JWTSecret
 
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		log.Fatalf("cannot read config: %s", err)

@@ -14,6 +14,10 @@ type UserOperations interface {
 	CreateUser(ctx context.Context, username string, email string, password string) (int64, error)
 	GenerateTokens(ctx context.Context, email string, password string) (int64, domain.Tokens, error)
 	RefreshToken(ctx context.Context, refreshToken string) (domain.Tokens, error)
+	
+	GetProfile(ctx context.Context, userId int64) (domain.User, error)
+	GetPendingUsers(ctx context.Context, limit, offset int32) ([]domain.User, int32, error)
+	AssignRole(ctx context.Context, targetUserId int64, newRole string) error
 }
 
 type Service struct {

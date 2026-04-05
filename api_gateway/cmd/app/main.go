@@ -17,6 +17,10 @@ import (
 // @title           Sirius docs API
 // @host            localhost:8080
 // @BasePath        /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main(){
 	cfg := config.MustLoad()
 	logger := logger.SetupLogger(cfg.Env)

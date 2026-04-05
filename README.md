@@ -59,6 +59,7 @@ temp_service:
 Для `api_gateway`:
 ```
 CONFIG_PATH=./configs/server/local.yaml
+SIGNING_KEY={secret_key_in_auth_service}
 ```
 
 для `auth_service`:
@@ -72,9 +73,11 @@ DB_PORT=5432
 DB_NAME=postgres
 DB_SSL=disable
 
-SIGNING_KEY={random_symbols}
+SIGNING_KEY={secret_key_in_auth_service}
 SALT={random_symbols}
 ```
+
+**!!!Важно!!! SIGNING_KEY из auth_service и из api_gateway должен совпадать**
 
 для `template_service`:
 ```
@@ -120,4 +123,16 @@ docker run -d -p 5432:5432 --name postgres -e POSTGRES_USER=wolkodaf -e POSTGRES
     go run cmd/app/main.go
     ```
 
+**Создание дефолтного админа**
 
+Также для управления системой нужно создать админа такой командой (из auth_service)
+```bash
+go run ./cmd/create_admin/main.go -u superadmin -e myadmin@docs.ru -p goida1234
+```
+`-env` - расположение .env файла
+
+`-u` - username админа
+
+`-e` - email админа
+
+`-p` - password админа

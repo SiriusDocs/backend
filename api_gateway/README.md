@@ -27,6 +27,7 @@ clients:
 В корне проекта создать .env:
 ```
 CONFIG_PATH=./configs/server/local.yaml 
+SECRET="secret_in_auth_service"
 ```
 
 **Запуск микросервиса (без docker):**

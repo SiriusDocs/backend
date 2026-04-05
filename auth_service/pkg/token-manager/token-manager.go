@@ -22,7 +22,8 @@ type Manager struct {
 
 type tokenClaims struct {
 	jwt.RegisteredClaims
-	UserId   int64 `json:"user_id"`
+	UserId int64  `json:"user_id"`
+	Role   string `json:"role"`
 }
 
 func NewManager(signingKey string) (*Manager, error) {
@@ -41,7 +42,8 @@ func (m *Manager) NewJWT(user domain.User, ttl time.Duration) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
-		UserId:   user.Id,
+		UserId: user.Id,
+		Role:   user.Role,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -56,7 +58,7 @@ func (m *Manager) NewJWT(user domain.User, ttl time.Duration) (string, error) {
 
 //-----------------------
 
-func (m *Manager) Parse(accessToken string) (int64, error) {
+func (m *Manager) Parse(accessToken string) (int64, string, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
@@ -64,15 +66,15 @@ func (m *Manager) Parse(accessToken string) (int64, error) {
 		return []byte(m.signingKey), nil
 	})
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	claims, ok := token.Claims.(*tokenClaims)
 	if !ok {
-		return 0, errors.New("token claims are not of type *tokenClaims")
+		return 0, "", errors.New("token claims are not of type *tokenClaims")
 	}
 
-	return claims.UserId, nil
+	return claims.UserId, claims.Role, nil
 }
 
 //-----------------------

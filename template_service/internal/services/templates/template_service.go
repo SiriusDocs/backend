@@ -13,15 +13,15 @@ import (
 )
 
 type ParamsService struct {
-	log   *slog.Logger
-	store storage.TemplateOperations
+	log       *slog.Logger
+	store     storage.TemplateOperations
 	taskStore storage.TaskOperations
 }
 
 func NewParamsService(log *slog.Logger, store storage.TemplateOperations, taskStore storage.TaskOperations) *ParamsService {
 	return &ParamsService{
-		log:   log,
-		store: store,
+		log:       log,
+		store:     store,
 		taskStore: taskStore,
 	}
 }
@@ -60,20 +60,26 @@ func (s *ParamsService) CreateTemplate(ctx context.Context, taskID string, param
 		return "", err
 	}
 
-	// 5. Валидация: типы данных и имена колонок (бизнес-валидация В СЕРВИСЕ)
+	// 4. Валидация: типы данных и имена колонок (бизнес-валидация В СЕРВИСЕ)
 	if err := s.validateParamValues(params); err != nil {
 		log.Warn("params validation failed", slog.String("error", err.Error()))
 		return "", err // Уже Validation
 	}
 
-	// 4. Создаем таблицу шаблона
+	// 5. Создаем таблицу шаблона
 	if err := s.store.CreateTemplateTable(ctx, taskID, params); err != nil {
 		log.Error("failed to create dynamic table", slog.String("error", err.Error()))
 		return "", err
 	}
 
-	// 5. Удаляем задачу (Cleanup)
-	// Если удаление упадет, это не критично для бизнеса (таблица-то создалась), 
+	// 6. Добавляем шаблон в таблицу templates
+	if err := s.store.AddTemplate(ctx, taskID, task.FileName, parserFields); err != nil {
+		log.Error("failed to insert template", slog.String("error", err.Error()))
+		return "", err
+	}
+
+	// 7. Удаляем задачу (Cleanup)
+	// Если удаление упадет, это не критично для бизнеса (таблица-то создалась),
 	// поэтому мы просто логируем ошибку, но не фейлим запрос пользователю.
 	if err := s.taskStore.DeleteTask(ctx, taskID); err != nil {
 		log.Error("failed to cleanup task after template creation", slog.String("error", err.Error()))
@@ -107,7 +113,7 @@ func (s *ParamsService) validateFieldsMatch(parserFields []string, userParams ma
 		}
 	}
 
-	// Обратная проверка не нужна, так как длины совпадают. 
+	// Обратная проверка не нужна, так как длины совпадают.
 	// Если длины равны и все поля из парсера есть в юзер-мапе, значит лишних полей в юзер-мапе нет.
 
 	return nil
@@ -133,3 +139,4 @@ func (s *ParamsService) validateParamValues(params map[string]string) error {
 
 	return nil
 }
+

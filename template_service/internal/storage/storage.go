@@ -32,6 +32,9 @@ type TaskOperations interface {
 type TemplateOperations interface {
 	// CreateTemplateTable создает динамическую таблицу для шаблона
 	CreateTemplateTable(ctx context.Context, templateID string, columns map[string]string) error
+
+	// AddTemplate добавляет шаблон в таблицу templates в БД
+	AddTemplate(ctx context.Context, templateID string, name string, vars []string) error
 }
 
 type Storage struct {

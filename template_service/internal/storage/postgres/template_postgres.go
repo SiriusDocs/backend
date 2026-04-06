@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/SiriusDocs/backend/template_service/internal/domain"
 	"github.com/jmoiron/sqlx"
@@ -92,6 +94,29 @@ func (r *TemplateOperationsPostgres) CreateTemplateTable(ctx context.Context, te
 	_, err := r.db.ExecContext(ctx, query)
 	if err != nil {
 		return domain.Internal(op, "failed to create table", err)
+	}
+
+	return nil
+}
+
+func (r *TemplateOperationsPostgres) AddTemplate(ctx context.Context, templateID string, name string, vars []string) error {
+	const op = "storage.postgres.template_postgres.AddTemplate"
+
+	query := fmt.Sprintf(`
+			INSERT INTO %s (id, name, vars, created_at, updated_at) 
+			VALUES ($1, $2, $3, $4, $5)`,
+		templatesTable)
+
+	varsStr, err := json.Marshal(vars)
+	if err != nil {
+		return domain.Internal(op, "failed to marshal variable array", err)
+	}
+
+	now := time.Now()
+	// Статус по умолчанию pending
+	_, err = r.db.ExecContext(ctx, query, templateID, name, varsStr, now, now)
+	if err != nil {
+		return domain.Internal(op, "failed to insert template", err)
 	}
 
 	return nil

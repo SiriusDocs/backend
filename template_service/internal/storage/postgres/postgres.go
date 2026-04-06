@@ -8,6 +8,7 @@ import (
 
 const (
 	tasksTable = "processing_tasks"
+	templatesTable = "templates"
 )
 
 func NewPostgresDB(host string, port string, username string, DBName string, password string, sslMode string) (*sqlx.DB, error) {

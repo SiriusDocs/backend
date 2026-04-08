@@ -9,4 +9,4 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o ./auth_service cmd/auth_user/main.go
 
-CMD ["/app/auth_service.go"]
+CMD ["/app/auth_service"]

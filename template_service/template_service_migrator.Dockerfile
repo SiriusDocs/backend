@@ -9,4 +9,4 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o ./migrator cmd/migrator/main.go 
 
-CMD ["/app/migrator.go"]
+CMD ["/app/migrator"]

@@ -9,4 +9,4 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o ./template_service cmd/temp/main.go 
 
-CMD ["/app/template_service.go"]
+CMD ["/app/template_service"]

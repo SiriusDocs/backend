@@ -9,4 +9,4 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o ./api_gateway cmd/app/main.go
 
-CMD ["/app/api_gateway.go"]
+CMD ["/app/api_gateway"]

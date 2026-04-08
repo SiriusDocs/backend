@@ -1,6 +1,6 @@
 # Sirius docs backend project
 
-# Развёртывание проекта (локально)
+# Развёртывание проекта (DEPRECATED. see ci-cd repository for instructions)
 (пока не упаковывал в докер, извините)
 
 1. Убедиться, что в корне директории каждого микросервиса существует файл конфига по пути `{microservice}/configs/server/local.yaml`

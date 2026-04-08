@@ -7,6 +7,6 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build cmd/app/main.go -o ./api_gateway.go
+RUN CGO_ENABLED=0 go build -o ./api_gateway cmd/app/main.go
 
 CMD ["/app/api_gateway.go"]

@@ -7,6 +7,6 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build cmd/migrator/main.go -o ./migrator
+RUN CGO_ENABLED=0 go build -o ./migrator cmd/migrator/main.go 
 
-CMD ["/app/migrator"]
+CMD ["/app/migrator.go"]

@@ -7,6 +7,6 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build cmd/temp/main.go -o ./template_service
+RUN CGO_ENABLED=0 go build cmd/temp/main.go -o ./template_service.go
 
-CMD ["/app/template_service"]
+CMD ["/app/template_service.go"]

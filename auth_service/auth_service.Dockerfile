@@ -7,6 +7,6 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build cmd/auth_user/main.go -o ./auth_service
+RUN CGO_ENABLED=0 go build cmd/auth_user/main.go -o ./auth_service.go
 
-CMD ["/app/auth_service"]
+CMD ["/app/auth_service.go"]

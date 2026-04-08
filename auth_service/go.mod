@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	github.com/lib/pq v1.11.2
 	github.com/pressly/goose/v3 v3.26.0
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.10
 )
 

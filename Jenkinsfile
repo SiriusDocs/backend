@@ -182,7 +182,6 @@ pipeline {
                 }
             }
         }
-    }
 
         stage("Just build template_service") {
             when {

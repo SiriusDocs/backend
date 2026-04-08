@@ -42,12 +42,24 @@ func (u *UserOperationsPostgres) CreateUser(ctx context.Context, username string
 
 func (u *UserOperationsPostgres) GetUser(ctx context.Context, email string, password string) (domain.User, error) {
 	var user domain.User
-	query := fmt.Sprintf("SELECT id,username,email,creation_timestamp FROM %s WHERE email=$1 AND hashed_password=$2", usersTable)
+	query := fmt.Sprintf("SELECT id, username, email, user_role, creation_timestamp FROM %s WHERE email=$1 AND hashed_password=$2", usersTable)
 	if err := u.db.GetContext(ctx, &user, query, email, password); err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
-            return domain.User{}, domain.ErrUserNotFound
-        }
-        return domain.User{}, fmt.Errorf("repository: failed to get user: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.User{}, domain.ErrUserNotFound
+		}
+		return domain.User{}, fmt.Errorf("repository: failed to get user: %w", err)
+	}
+	return user, nil
+}
+
+func (u *UserOperationsPostgres) GetUserById(ctx context.Context, id int64) (domain.User, error) {
+	var user domain.User
+	query := fmt.Sprintf("SELECT id, username, email, user_role, creation_timestamp FROM %s WHERE id=$1", usersTable)
+	if err := u.db.GetContext(ctx, &user, query, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.User{}, domain.ErrUserNotFound
+		}
+		return domain.User{}, fmt.Errorf("failed to get user by id: %w", err)
 	}
 	return user, nil
 }
@@ -89,4 +101,39 @@ func (u *UserOperationsPostgres) IsTokenValid(ctx context.Context, refreshToken 
 		return 0, fmt.Errorf("db error: %w", err)
 	}
 	return userID, nil
+}
+
+// получение списка ожидающих с пагинацией
+func (u *UserOperationsPostgres) GetPendingUsers(ctx context.Context, limit, offset int32) ([]domain.User, int32, error) {
+	var users []domain.User
+	var totalCount int32
+
+	// Считаем общее кол-во для пагинации
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE user_role = 'PENDING'", usersTable)
+	if err := u.db.GetContext(ctx, &totalCount, countQuery); err != nil {
+		return nil, 0, err
+	}
+
+	query := fmt.Sprintf("SELECT id, username, email, user_role, creation_timestamp FROM %s WHERE user_role = 'PENDING' LIMIT $1 OFFSET $2", usersTable)
+	if err := u.db.SelectContext(ctx, &users, query, limit, offset); err != nil {
+		return nil, 0, err
+	}
+
+	return users, totalCount, nil
+}
+
+// обновление роли
+func (u *UserOperationsPostgres) UpdateUserRole(ctx context.Context, userId int64, newRole string) error {
+	query := fmt.Sprintf("UPDATE %s SET user_role = $1 WHERE id = $2", usersTable)
+	res, err := u.db.ExecContext(ctx, query, newRole, userId)
+	if err != nil {
+		return err
+	}
+	
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
 }

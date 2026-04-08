@@ -37,3 +37,15 @@ go mod download
 go run cmd/migrator/main.go -db-url="postgres://wolkodaf:goida228@localhost:5432/postgres?sslmode=disable" -migrations-path=./migrations --level=up
 go run cmd/auth_user/main.go
 ```
+
+**Создание дефолтного админа**
+```bash
+go run ./cmd/create_admin/main.go -u superadmin -e myadmin@docs.ru -p goida1234
+```
+`-env` - расположение .env файла
+
+`-u` - username админа
+
+`-e` - email админа
+
+`-p` - password админа

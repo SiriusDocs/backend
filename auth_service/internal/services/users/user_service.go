@@ -52,10 +52,26 @@ func (u *UsersService) RefreshToken(ctx context.Context, refreshToken string) (d
 		return domain.Tokens{}, err
 	}
 
-	user := domain.User{Id: userId}
-	_, tokens, err := u.createSession(ctx, user)
+	// Обязательно достаем пользователя, чтобы узнать его актуальную роль (вдруг админ ее обновил)
+	user, err := u.store.GetUserById(ctx, userId)
+	if err != nil {
+		return domain.Tokens{}, err
+	}
 
+	_, tokens, err := u.createSession(ctx, user)
 	return tokens, err
+}
+
+func (u *UsersService) GetProfile(ctx context.Context, userId int64) (domain.User, error) {
+	return u.store.GetUserById(ctx, userId)
+}
+
+func (u *UsersService) GetPendingUsers(ctx context.Context, limit, offset int32) ([]domain.User, int32, error) {
+	return u.store.GetPendingUsers(ctx, limit, offset)
+}
+
+func (u *UsersService) AssignRole(ctx context.Context, targetUserId int64, newRole string) error {
+	return u.store.UpdateUserRole(ctx, targetUserId, newRole)
 }
 
 //--------------------

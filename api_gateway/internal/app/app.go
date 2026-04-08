@@ -55,7 +55,7 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 	router := transport.NewRouter(cfg)
 	apiGroup := router.Group("/")
 
-	authHndlr := authHandler.New(log, authService, &cfg.Clients.AuthService)
+	authHndlr := authHandler.New(log, authService, &cfg.Clients.AuthService, cfg.JWTSecret)
 	authHndlr.RegisterRoutes(apiGroup)
 
 	tempHndlr := tempHandler.New(log, templateService, &cfg.Clients.TempService)

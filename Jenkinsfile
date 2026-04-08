@@ -36,7 +36,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f api_gateway.Dockerfile ./api_gateway"
+                            "-f ./api_gateway/api_gateway.Dockerfile ./api_gateway"
                         )
                     }
                 }
@@ -54,7 +54,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f api_gateway.Dockerfile ./api_gateway"
+                            "-f ./api_gateway/api_gateway.Dockerfile ./api_gateway"
                         )
                         customImage.push()
                         customImage.push('latest')
@@ -76,7 +76,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f auth_service.Dockerfile ./auth_service"
+                            "-f ./auth_service/auth_service.Dockerfile ./auth_service"
                         )
                     }
                 }
@@ -94,7 +94,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f auth_service.Dockerfile ./auth_service"
+                            "-f ./auth_service/auth_service.Dockerfile ./auth_service"
                         )
                         customImage.push()
                         customImage.push('latest')
@@ -116,7 +116,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f auth_service_migrator.Dockerfile ./auth_service"
+                            "-f ./auth_service/auth_service_migrator.Dockerfile ./auth_service"
                         )
                     }
                 }
@@ -134,7 +134,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f auth_service_migrator.Dockerfile ./auth_service"
+                            "-f ./auth_service/auth_service_migrator.Dockerfile ./auth_service"
                         )
                         customImage.push()
                         customImage.push('latest')
@@ -156,7 +156,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f template_service_migrator.Dockerfile ./template_service"
+                            "-f ./template_service/template_service_migrator.Dockerfile ./template_service"
                         )
                     }
                 }
@@ -174,7 +174,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f template_service_migrator.Dockerfile ./template_service"
+                            "-f ./template_service/template_service_migrator.Dockerfile ./template_service"
                         )
                         customImage.push()
                         customImage.push('latest')
@@ -196,7 +196,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f template_service.Dockerfile ./template_service"
+                            "-f ./template_service/template_service.Dockerfile ./template_service"
                         )
                     }
                 }
@@ -214,7 +214,7 @@ pipeline {
                 script {
                     docker.withRegistry("https://${REGISTRY_URL}", env.REGISTRY_CREDENTIALS_ID) {
                         def customImage = docker.build("${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "-f template_service.Dockerfile ./template_service"
+                            "-f ./template_service/template_service.Dockerfile ./template_service"
                         )
                         customImage.push()
                         customImage.push('latest')

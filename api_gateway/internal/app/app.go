@@ -13,7 +13,9 @@ import (
 	"github.com/SiriusDocs/backend/api_gateway/internal/transport"
 	authHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/auth"
 	tempHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/templates"
+	fileHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/files"
 	"github.com/SiriusDocs/protos/gen/go/auth"
+	"github.com/SiriusDocs/protos/gen/go/file"
 	"github.com/SiriusDocs/protos/gen/go/templates"
 )
 
@@ -39,6 +41,11 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
+	fileConn, err := app.connectService("file-service", cfg.Clients.FileService.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	// documentConn, err := grpcclient.NewClient(cfg.Clients.DocumentService.Address, log)
 	// if err != nil { panic(err) }
 	// conns = append(conns, documentConn)
@@ -48,6 +55,9 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 
 	templateClient := templates.NewTempClient(templateConn)
 	templateService := services.NewTempService(templateClient)
+
+	fileClient := files.NewFileClient(fileConn)
+	fileService := services.NewFileService(fileClient)
 
 	// documentClient := billing.NewDocumentClient(documentConn)
 	// documentService := services.NewDocumentService(documentClient)
@@ -60,6 +70,10 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 
 	tempHndlr := tempHandler.New(log, templateService, &cfg.Clients.TempService)
 	tempHndlr.RegisterRoutes(apiGroup)
+
+	fileHndlr := fileHandler.New(log, fileService, &cfg.Clients.FileService)
+	fileHndlr.RegisterRoutes(apiGroup)
+
 	// docHndlr := docHandler.New(log, documentService)
 	// docHndlr.RegisterRoutes(apiGroup)
 

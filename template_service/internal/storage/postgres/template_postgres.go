@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -120,4 +122,23 @@ func (r *TemplateOperationsPostgres) AddTemplate(ctx context.Context, templateID
 	}
 
 	return nil
+}
+
+func (r *TemplateOperationsPostgres) ListTemplates(ctx context.Context, limit int, skip int) ([]domain.Template, error) {
+	const op = "storage.postgres.template_postgres.ListTemplates"
+
+	var templates []domain.Template
+
+	// TODO: add different sorting methods?
+	query := fmt.Sprintf("SELECT * FROM %s LIMIT $1 SKIP $2 ORDER BY updated_at", tasksTable)
+
+	err := r.db.GetContext(ctx, &templates, query, limit, skip)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []domain.Template{}, domain.NotFound(op, "task not found")
+		}
+		return []domain.Template{}, domain.Internal(op, "failed to get templates", err)
+	}
+
+	return templates, nil
 }

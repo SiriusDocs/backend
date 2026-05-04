@@ -27,7 +27,7 @@ func NewParamsService(log *slog.Logger, store storage.TemplateOperations, taskSt
 }
 
 func (s *ParamsService) CreateTemplate(ctx context.Context, taskID string, params map[string]string) (string, error) {
-	const op = "TemplateManager.CreateTemplate"
+	const op = "services.templates.params_service.CreateTemplate"
 
 	log := s.log.With(
 		slog.String("op", op),
@@ -93,9 +93,14 @@ func (s *ParamsService) CreateTemplate(ctx context.Context, taskID string, param
 	return taskID, nil
 }
 
+func (s *ParamsService) ListTemplates(ctx context.Context, perPage int, page int) ([]domain.Template, error) {
+	const op = "services.templates.params_service.ListTemplates"
+	return s.store.ListTemplates(ctx, perPage, page*perPage)
+}
+
 // validateFieldsMatch проверяет, что набор полей от парсера совпадает с набором полей от пользователя
 func (s *ParamsService) validateFieldsMatch(parserFields []string, userParams map[string]string) error {
-	const op = "ParamsService.validateFieldsMatch"
+	const op = "services.templates.params_service.validateFieldsMatch"
 
 	// 1. Проверка количества
 	if len(parserFields) != len(userParams) {
@@ -121,7 +126,7 @@ func (s *ParamsService) validateFieldsMatch(parserFields []string, userParams ma
 
 // validateParamValues проверяет имена колонок и типы данных ДО передачи в storage
 func (s *ParamsService) validateParamValues(params map[string]string) error {
-	const op = "ParamsService.validateParamValues"
+	const op = "services.templates.params_service.validateParamValues"
 
 	for colName, userType := range params {
 		// Проверка имени колонки
@@ -139,4 +144,3 @@ func (s *ParamsService) validateParamValues(params map[string]string) error {
 
 	return nil
 }
-

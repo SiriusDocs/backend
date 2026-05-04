@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/SiriusDocs/backend/template_service/internal/domain"
 	"github.com/SiriusDocs/backend/template_service/internal/config"
 	temp "github.com/SiriusDocs/backend/template_service/internal/services/templates"
 	"github.com/SiriusDocs/backend/template_service/internal/storage"
@@ -21,6 +22,9 @@ type TaskOperations interface {
 type ParamsOperations interface {
 	// CreateTemplate создает таблицу в БД на основе параметров
 	CreateTemplate(ctx context.Context, taskID string, params map[string]string) (string, error)
+
+	// ListTemplates возвращает список зарегистрированных шаблонов
+	ListTemplates(ctx context.Context, perPage int, page int) ([]domain.Template, error)
 }
 
 type Service struct {
@@ -34,4 +38,3 @@ func NewService(log *slog.Logger, store *storage.Storage, cfg config.TasksConfig
 		ParamsOperations: temp.NewParamsService(log, store.TemplateOperations, store.TaskOperations),
 	}
 }
-

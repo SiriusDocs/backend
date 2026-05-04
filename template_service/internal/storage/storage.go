@@ -35,6 +35,9 @@ type TemplateOperations interface {
 
 	// AddTemplate добавляет шаблон в таблицу templates в БД
 	AddTemplate(ctx context.Context, templateID string, name string, vars []string) error
+
+	// ListTemplates возвращает список зарегистрированных шаблонов
+	ListTemplates(ctx context.Context, limit int, skip int) ([]domain.Template, error)
 }
 
 type Storage struct {

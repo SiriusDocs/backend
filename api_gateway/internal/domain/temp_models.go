@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 // UploadFileResponse - ответ на загрузку файла
 type UploadFileResponse struct {
 	TaskID string `json:"task_id" example:"550e8400-e29b-41d4-a716-446655440000"`
@@ -18,7 +20,7 @@ type TaskResultNames struct {
 // CreateParamsRequest - запрос на создание новой таблицы по шаблону
 type CreateParamsRequest struct {
 	//TODO: Добавить поле названия документа
-	TaskID string            `json:"task_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
+	TaskID string `json:"task_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
 	// swaggertype:"object,string" подсказывает сваггеру, что это мапа строк
 	Params map[string]string `json:"params" binding:"required" swaggertype:"object,string" example:"client_name:string,contract_sum:int,is_active:boolean"`
 }
@@ -28,4 +30,20 @@ type CreateParamsResponse struct {
 	TemplateID string `json:"template_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
+type ListTemplatesRequest struct {
+	PerPage int32 `json:"per_page"`
+	Page    int32 `json:"page"`
+}
 
+type ListTemplatesResponse struct {
+	Templates []Template `json:"templates"`
+}
+
+type Template struct {
+	ID          string    `db:"id"`
+	Name        string    `db:"name"`
+	Description string    `db:"description"`
+	Vars        string    `db:"vars"` // Переменные шаблона в JSON-формате
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
+}

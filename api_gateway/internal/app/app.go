@@ -13,8 +13,10 @@ import (
 	"github.com/SiriusDocs/backend/api_gateway/internal/transport"
 	authHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/auth"
 	tempHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/templates"
+	fillHandler "github.com/SiriusDocs/backend/api_gateway/internal/transport/handlers/fill"
 	"github.com/SiriusDocs/protos/gen/go/auth"
 	"github.com/SiriusDocs/protos/gen/go/templates"
+	"github.com/SiriusDocs/protos/gen/go/fill"
 )
 
 type App struct {
@@ -39,6 +41,11 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
+	fillConn, err := app.connectService("fill-service", cfg.Clients.FillService.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	// documentConn, err := grpcclient.NewClient(cfg.Clients.DocumentService.Address, log)
 	// if err != nil { panic(err) }
 	// conns = append(conns, documentConn)
@@ -48,6 +55,9 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 
 	templateClient := templates.NewTempClient(templateConn)
 	templateService := services.NewTempService(templateClient)
+
+	fillClient := fill.NewFillClient(fillConn)
+	fillService := services.NewFillService(fillClient)
 
 	// documentClient := billing.NewDocumentClient(documentConn)
 	// documentService := services.NewDocumentService(documentClient)
@@ -60,6 +70,10 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 
 	tempHndlr := tempHandler.New(log, templateService, &cfg.Clients.TempService)
 	tempHndlr.RegisterRoutes(apiGroup)
+
+	fillHndlr := fillHandler.New(log, fillService, &cfg.Clients.FillService)
+	fillHndlr.RegisterRoutes(apiGroup)
+
 	// docHndlr := docHandler.New(log, documentService)
 	// docHndlr.RegisterRoutes(apiGroup)
 
@@ -67,7 +81,6 @@ func New(log *slog.Logger, cfg *config.Config) (*App, error) {
 
 	return app, nil
 }
-
 
 // connectService подключается к gRPC сервису с логированием
 func (a *App) connectService(name, address string) (*grpc.ClientConn, error) {
@@ -103,3 +116,4 @@ func (a *App) Close() {
 	}
 	a.log.Info("all grpc connections closed")
 }
+

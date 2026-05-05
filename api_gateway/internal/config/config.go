@@ -16,16 +16,17 @@ type Config struct {
 }
 
 type HTTPServer struct {
-	Host        string        `yaml:"host" env-default:"localhost"`
-	Port        int        `yaml:"port" env-default:"8080"`
-	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
+	Host           string        `yaml:"host" env-default:"localhost"`
+	Port           int           `yaml:"port" env-default:"8080"`
+	Timeout        time.Duration `yaml:"timeout" env-default:"4s"`
+	IdleTimeout    time.Duration `yaml:"idle_timeout" env-default:"60s"`
 	AllowedOrigins []string      `yaml:"allowed_origins" env-default:"http://localhost:5173"` // CORS settings
 }
 
 type ClientsConfig struct {
 	AuthService GRPCClient `yaml:"auth_service"`
 	TempService GRPCClient `yaml:"temp_service"`
+	FillService GRPCClient `yaml:"fill_service"`
 	// DocumentService, ChahgesService и т.д.
 }
 

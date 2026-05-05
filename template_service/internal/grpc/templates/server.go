@@ -140,6 +140,33 @@ func (s *TemplateServer) CreateTemplateParams(ctx context.Context, in *pb.Create
 	}, nil
 }
 
+func (s *TemplateServer) ListTemplates(ctx context.Context, in *pb.ListTemplatesRequest) (*pb.ListTemplatesResponse, error) {
+	if in.PerPage <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "per_page <= 0")
+	}
+
+	resp, err := s.params.ListTemplates(ctx, int(in.PerPage), int(in.Page))
+	if err != nil {
+		return nil, s.mapError(err, "ListTemplates")
+	}
+
+	templateList := make([]*pb.Template, len(resp))
+	for _, t := range resp {
+		templateList = append(templateList, &pb.Template{
+			Id:          t.ID,
+			Name:        t.Name,
+			Description: t.Description,
+			Vars:        t.Vars,
+			CreatedAt:   t.CreatedAt,
+			UpdatedAt:   t.UpdatedAt,
+		})
+	}
+
+	return &pb.ListTemplatesResponse{
+		Templates: templateList,
+	}, nil
+}
+
 // mapError — ЕДИНАЯ точка маппинга доменных ошибок → gRPC коды
 // Логирует internal-ошибки, НЕ пробрасывает их клиенту
 func (s *TemplateServer) mapError(err error, action string) error {

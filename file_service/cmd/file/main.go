@@ -21,7 +21,11 @@ func main() {
     initCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-	application := app.New(initCtx, logger, cfg)
+	application, err := app.New(initCtx, logger, cfg)
+	if err != nil {
+		logger.Error("failed to initialize application", logs.ErrAttrs(err))
+		os.Exit(1)
+	}
 	go func(){
 		application.GRPCServer.MustRun()
 	}()
@@ -32,5 +36,4 @@ func main() {
     <-stop
     // initiate graceful shutdown
     application.GRPCServer.Stop() // Assuming GRPCServer has Stop() method for graceful shutdown
-    logger.Info("Gracefully stopped") 
 }

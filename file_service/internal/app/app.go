@@ -15,13 +15,15 @@ type App struct {
 	GRPCServer *grpcapp.App
 }
 
-func New(ctx context.Context, logger *slog.Logger, cfg *config.Config) *App {
+func New(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*App, error) {
+	const op = "app.New"
+
 	st, err := storage.NewS3Storage(ctx, cfg.S3)
 	if err != nil {
-		panic(fmt.Errorf("failed to initialize s3 storage", "error", err.Error()))
+		return nil, fmt.Errorf("%s: failed to initialize s3 storage: %w", op, err)
 	}
 	service := services.NewService(logger,st)
 	grpcapp := grpcapp.New(logger, service, cfg.GRPC.Port, cfg.GRPC.Timeout)
 
-	return &App{ GRPCServer: grpcapp}
+	return &App{ GRPCServer: grpcapp}, nil
 }

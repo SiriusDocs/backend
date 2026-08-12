@@ -22,6 +22,8 @@ type Storage struct {
 }
 
 func New(ctx context.Context, cfg config.S3) (*Storage, error) {
+	const op = "storage.s3.New"
+
 	awsConf, err := awscfg.LoadDefaultConfig(ctx,
 		awscfg.WithRegion(cfg.Region),
 		awscfg.WithCredentialsProvider(
@@ -29,7 +31,7 @@ func New(ctx context.Context, cfg config.S3) (*Storage, error) {
 		),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("load aws config: %w", err)
+		return nil, fmt.Errorf("%s: load aws config: %w", op, err)
 	}
 
 	client := s3.NewFromConfig(awsConf, func(o *s3.Options) {
@@ -41,6 +43,8 @@ func New(ctx context.Context, cfg config.S3) (*Storage, error) {
 }
 
 func (s *Storage) PresignPut(ctx context.Context, key, contentType string, ttl time.Duration) (string, error) {
+	const op = "storage.s3.PresignPut"
+
 	ps := s3.NewPresignClient(s.client)
 	req, err := ps.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
@@ -49,13 +53,15 @@ func (s *Storage) PresignPut(ctx context.Context, key, contentType string, ttl t
 	}, s3.WithPresignExpires(ttl))
 
 	if err != nil {
-		return "", fmt.Errorf("s3 presign put %q: %w", key, err)
+		return "", fmt.Errorf("%s (key=%s): %w", op, key, err)
 	}
 
 	return req.URL, nil
 }
 
 func (s *Storage) PresignGet(ctx context.Context, key string, ttl time.Duration) (string, error) {
+	const op = "storage.s3.PresignGet"
+
 	ps := s3.NewPresignClient(s.client)
 	req, err := ps.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
@@ -63,29 +69,33 @@ func (s *Storage) PresignGet(ctx context.Context, key string, ttl time.Duration)
 	}, s3.WithPresignExpires(ttl))
 
 	if err != nil {
-		return "", fmt.Errorf("s3 presign get %q: %w", key, err)
+		return "", fmt.Errorf("%s (key=%s): %w", op, key, err)
 	}
 
 	return req.URL, nil
 }
 
 func (s *Storage) Head(ctx context.Context, key string) (domain.FileMetadata, error) {
+	const op = "storage.s3.Head"
+
 	out, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 	
 	if err != nil {
+		// В AWS SDK v2 ненайденный объект может возвращать NotFound или NoSuchKey
 		var notFound *types.NotFound
-		if errors.As(err, &notFound) {
-			// Ошибку сети или прав доступа не кидаем, просто говорим: "Файла нет"
+		var noSuchKey *types.NoSuchKey
+		if errors.As(err, &notFound) || errors.As(err, &noSuchKey) {
+			// Отсутствие файла — это не ошибка сети или S3, это корректный бизнес-ответ
 			return domain.FileMetadata{
 				Exists: false,
 			}, nil
 		}
-		
-		// Если это другая ошибка (нет интернета, неверный токен и т.д.) - возвращаем ее
-		return domain.FileMetadata{Exists: false}, fmt.Errorf("s3 head %q: %w", key, err)
+
+		// Любая другая ошибка (нет сети, 403 Forbidden, 500 S3 Error) оборачивается
+		return domain.FileMetadata{Exists: false}, fmt.Errorf("%s (key=%s): %w", op, key, err)
 	}
 	
 	// Безопасно достаем время и переводим в строку
@@ -103,13 +113,15 @@ func (s *Storage) Head(ctx context.Context, key string) (domain.FileMetadata, er
 }
 
 func (s *Storage) Delete(ctx context.Context, key string) error {
+	const op = "storage.s3.Delete"
+
 	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 
 	if err != nil {
-		return fmt.Errorf("s3 delete %q: %w", key, err)
+		return fmt.Errorf("%s (key=%s): %w", op, key, err)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"git.wolkodaf2946.ru/Wolkodaf/microservices_prac/file_service/internal/config"
@@ -26,8 +27,10 @@ type Storage struct {
 }
 
 func NewS3Storage(ctx context.Context, cfg config.S3) (*Storage, error) {
+	const op = "storage.NewS3Storage"
+
 	s3Ops, err := s3.New(ctx, cfg)
-	if err != nil { return nil, err }
+	if err != nil { return nil, fmt.Errorf("%s: %w", op, err) }
 
 	return &Storage{
 		FileOperations: s3Ops,

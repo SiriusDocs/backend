@@ -26,20 +26,20 @@ func PayloadRedactInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 
 		// ── Входящий запрос ──
 		if msg, ok := req.(proto.Message); ok {
-			log.InfoContext(ctx, "request payload",
-				slog.String("method", info.FullMethod),
-				slog.Any("body", msg),
-			)
+			log.DebugContext(ctx, "gRPC request payload",
+                slog.String("method", info.FullMethod),
+                slog.Any("body", msg),
+            )
 		}
 
 		resp, err := handler(ctx, req)
 
 		// ── Исходящий ответ ──
 		if msg, ok := resp.(proto.Message); ok {
-			log.InfoContext(ctx, "response payload",
-				slog.String("method", info.FullMethod),
-				slog.Any("body", msg),
-			)
+			log.DebugContext(ctx, "gRPC response payload",
+                slog.String("method", info.FullMethod),
+                slog.Any("body", msg),
+            )
 		}
 
 		return resp, err

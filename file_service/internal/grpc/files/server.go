@@ -11,6 +11,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// TODO: закинуть в конфиг
+const defaultExpiryMinutes = 15 // Значение по умолчанию для TTL ссылки
+
 type FileServer struct {
 	pb.UnimplementedFileServiceServer
 	services services.FileOperations
@@ -29,43 +32,77 @@ func Registered(gRPCServer *grpc.Server, Service services.FileOperations) {
 }
 
 func (s *FileServer) GenerateDownloadURL(ctx context.Context, req *pb.GenerateDownloadURLRequest) (*pb.GenerateDownloadURLResponse, error) {
-	ttl := time.Duration(req.ExpiryMinutes) * time.Minute
+	if req.GetObjectKey() == "" {
+		return nil, status.Error(codes.InvalidArgument, "object_key is required")
+	}
 
-	url, err := s.services.GenerateDownloadURL(ctx, req.ObjectKey, ttl)
+	expiryMinutes := req.GetExpiryMinutes()
+	if expiryMinutes <= 0 {
+		expiryMinutes = defaultExpiryMinutes
+	}
+
+	ttl := time.Duration(expiryMinutes) * time.Minute
+
+	url, err := s.services.GenerateDownloadURL(ctx, req.GetObjectKey(), ttl)
 	if err != nil {
+		// ошибка уже залогирована внутри service с полным стек-трейсом
+		// клиенту отдаем понятный статус без слива внутренних деталей
 		return nil, status.Error(codes.Internal, "failed to generate download URL")
 	}
+
 	return &pb.GenerateDownloadURLResponse{Url: url}, nil
 }
 
 func (s *FileServer) GenerateUploadURL(ctx context.Context, req *pb.GenerateUploadURLRequest) (*pb.GenerateUploadURLResponse, error) {
-	ttl := time.Duration(req.ExpiryMinutes) * time.Minute
+	if req.GetObjectKey() == "" {
+		return nil, status.Error(codes.InvalidArgument, "object_key is required")
+	}
+	if req.GetContentType() == "" {
+		return nil, status.Error(codes.InvalidArgument, "content_type is required")
+	}
 
-	url, err := s.services.GenerateUploadURL(ctx, req.ObjectKey, req.ContentType, ttl)
+	expiryMinutes := req.GetExpiryMinutes()
+	if expiryMinutes <= 0 {
+		expiryMinutes = defaultExpiryMinutes
+	}
+
+	ttl := time.Duration(expiryMinutes) * time.Minute
+
+	url, err := s.services.GenerateUploadURL(ctx, req.GetObjectKey(), req.GetContentType(), ttl)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate upload URL")
 	}
+
 	return &pb.GenerateUploadURLResponse{Url: url}, nil
 }
 
 func (s *FileServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest) (*pb.DeleteFileResponse, error) {
-	err := s.services.DeleteFile(ctx, req.ObjectKey)
+	if req.GetObjectKey() == "" {
+		return nil, status.Error(codes.InvalidArgument, "object_key is required")
+	}
+
+	err := s.services.DeleteFile(ctx, req.GetObjectKey())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to delete file")
 	}
+
 	return &pb.DeleteFileResponse{Success: true}, nil
 }
 
 func (s *FileServer) GetFileMetadata(ctx context.Context, req *pb.GetFileMetadataRequest) (*pb.GetFileMetadataResponse, error) {
-	metadata, err := s.services.GetFileMetadata(ctx, req.ObjectKey)
+	if req.GetObjectKey() == "" {
+		return nil, status.Error(codes.InvalidArgument, "object_key is required")
+	}
+
+	metadata, err := s.services.GetFileMetadata(ctx, req.GetObjectKey())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get file metadata")
 	}
+
 	return &pb.GetFileMetadataResponse{
 		Exists:       metadata.Exists,
 		ContentType:  metadata.ContentType,
 		LastModified: metadata.LastModified,
 	}, nil
 }
-
 // func (s *FileServer) CopyFile(ctx context.Context, req *pb.CopyFileRequest) (*pb.CopyFileResponse, error)

@@ -1,3 +1,6 @@
 *.log
 *.env
 *.yaml
+
+dump_project.py
+test.md

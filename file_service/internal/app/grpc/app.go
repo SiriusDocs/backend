@@ -22,7 +22,7 @@ type App struct {
 	port       int // Порт, на котором будет работать grpc-сервер
 }
 
-func New(log *slog.Logger, service *services.Service, port int) *App {
+func New(log *slog.Logger, service *services.Service, port int, timeout time.Duration) *App {
 
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
@@ -50,6 +50,8 @@ func New(log *slog.Logger, service *services.Service, port int) *App {
 	}
 
 	gRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		ContextMetadataInterceptor(),                                           // добавление метаданных в контекст
+		TimeoutInterceptor(timeout),                                            // таймаут на обработку запроса
 		recovery.UnaryServerInterceptor(recoveryOpts...),                       // перехват паник
 		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...), // логирование запросов/ответов
 		PayloadRedactInterceptor(log),                                          // безопасный логгер payload'ов
@@ -90,10 +92,20 @@ func (a *App) Run() error {
 
 func (a *App) Stop() {
 	const op = "app.grpcapp.Stop"
+	a.log.With(slog.String("op", op)).Info("stopping gRPC server", slog.Int("port", a.port))
 
-	a.log.With(slog.String("op", op)).
-		Info("stopping gRPC server", slog.Int("port", a.port))
+	stopped := make(chan struct{})
+	go func() {
+		a.gRPCServer.GracefulStop()
+		close(stopped)
+	}()
 
-	// Используем встроенный в gRPCServer механизм graceful shutdown
-	a.gRPCServer.GracefulStop()
+	// Даем 5 секунд на мягкое завершение, иначе выключаем жестко
+	select {
+	case <-stopped:
+		a.log.Info("gRPC server stopped gracefully")
+	case <-time.After(5 * time.Second):
+		a.log.Warn("gRPC server timeout reached, forcing shutdown")
+		a.gRPCServer.Stop()
+	}
 }

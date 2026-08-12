@@ -29,7 +29,9 @@ func Registered(gRPCServer *grpc.Server, Service services.FileOperations) {
 }
 
 func (s *FileServer) GenerateDownloadURL(ctx context.Context, req *pb.GenerateDownloadURLRequest) (*pb.GenerateDownloadURLResponse, error) {
-	url, err := s.services.GenerateDownloadURL(ctx, req.ObjectKey, time.Duration(req.ExpiryMinutes))
+	ttl := time.Duration(req.ExpiryMinutes) * time.Minute
+
+	url, err := s.services.GenerateDownloadURL(ctx, req.ObjectKey, ttl)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate download URL")
 	}
@@ -37,7 +39,9 @@ func (s *FileServer) GenerateDownloadURL(ctx context.Context, req *pb.GenerateDo
 }
 
 func (s *FileServer) GenerateUploadURL(ctx context.Context, req *pb.GenerateUploadURLRequest) (*pb.GenerateUploadURLResponse, error) {
-	url, err := s.services.GenerateUploadURL(ctx, req.ObjectKey, req.ContentType, time.Duration(req.ExpiryMinutes))
+	ttl := time.Duration(req.ExpiryMinutes) * time.Minute
+
+	url, err := s.services.GenerateUploadURL(ctx, req.ObjectKey, req.ContentType, ttl)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate upload URL")
 	}

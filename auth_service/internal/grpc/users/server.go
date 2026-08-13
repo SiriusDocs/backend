@@ -21,7 +21,7 @@ type UsersServer struct {
 type AuthServer interface {
 	Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error)
 	Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error)
-	GetNewTokens(ctx context.Context, in *pb.TokensRequest) (*pb.TokenResponce, error)
+	GetNewTokens(ctx context.Context, in *pb.TokensRequest) (*pb.TokenResponse, error)
 }
 
 func Registered(gRPCServer *grpc.Server, Service services.UserOperations) {
@@ -65,7 +65,7 @@ func (u *UsersServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.Login
 	}, nil
 }
 
-func (u *UsersServer) GetNewTokens(ctx context.Context, in *pb.TokensRequest) (*pb.TokenResponce, error) {
+func (u *UsersServer) GetNewTokens(ctx context.Context, in *pb.TokensRequest) (*pb.TokenResponse, error) {
 	if in.RefreshToken == "" {
 		return nil, status.Error(codes.InvalidArgument, "all fields are required")
 	}
@@ -79,8 +79,73 @@ func (u *UsersServer) GetNewTokens(ctx context.Context, in *pb.TokensRequest) (*
 		fmt.Println(err)
 		return nil, status.Error(codes.Internal, "unexpected error")
 	}
-	return &pb.TokenResponce{
+	return &pb.TokenResponse{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
+	}, nil
+}
+
+func (u *UsersServer) GetProfile(ctx context.Context, in *pb.GetProfileRequest) (*pb.GetProfileResponse, error) {
+	if in.GetUserId() <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	user, avatarURL, err := u.services.GetProfile(ctx, in.GetUserId())
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+		return nil, status.Error(codes.Internal, "failed to get user profile")
+	}
+
+	return &pb.GetProfileResponse{
+		UserId:    user.Id,
+		Username:  user.Username,
+		Email:     user.Email,
+		UserRole:  user.Role,
+		AvatarUrl: avatarURL,
+	}, nil
+}
+
+func (u *UsersServer) GetAvatar(ctx context.Context, in *pb.GetAvatarRequest) (*pb.GetAvatarResponse, error) {
+	if in.GetUserId() <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	avatarURL, err := u.services.GetAvatarURL(ctx, in.GetUserId())
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+		if errors.Is(err, domain.ErrAvatarNotFound) {
+			return nil, status.Error(codes.NotFound, "avatar not found")
+		}
+		return nil, status.Error(codes.Internal, "failed to get avatar url")
+	}
+
+	return &pb.GetAvatarResponse{
+		AvatarUrl: avatarURL,
+	}, nil
+}
+
+func (u *UsersServer) GenerateAvatarUploadUrl(ctx context.Context, in *pb.GenerateAvatarUploadUrlRequest) (*pb.GenerateAvatarUploadUrlResponse, error) {
+	if in.GetUserId() <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if in.GetContentType() == "" {
+		return nil, status.Error(codes.InvalidArgument, "content_type is required")
+	}
+
+	uploadURL, avatarKey, err := u.services.GenerateAvatarUploadURL(ctx, in.GetUserId(), in.GetContentType())
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+		return nil, status.Error(codes.Internal, "failed to generate avatar upload url")
+	}
+
+	return &pb.GenerateAvatarUploadUrlResponse{
+		UploadUrl: uploadURL,
+		AvatarKey: avatarKey,
 	}, nil
 }

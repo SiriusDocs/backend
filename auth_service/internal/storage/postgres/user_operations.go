@@ -41,15 +41,59 @@ func (u *UserOperationsPostgres) CreateUser(ctx context.Context, username string
 }
 
 func (u *UserOperationsPostgres) GetUser(ctx context.Context, email string, password string) (domain.User, error) {
+	const op = "storage.postgres.GetUser"
+
 	var user domain.User
-	query := fmt.Sprintf("SELECT id,username,email,creation_timestamp FROM %s WHERE email=$1 AND hashed_password=$2", usersTable)
+	query := fmt.Sprintf("SELECT id, username, email, user_role, avatar_key, creation_timestamp FROM %s WHERE email=$1 AND hashed_password=$2", usersTable)
+
 	if err := u.db.GetContext(ctx, &user, query, email, password); err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
-            return domain.User{}, domain.ErrUserNotFound
-        }
-        return domain.User{}, fmt.Errorf("repository: failed to get user: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			// Если не нашли запись по комбинации email + password — возвращаем ErrInvalidCreds
+			return domain.User{}, domain.ErrInvalidCreds
+		}
+		return domain.User{}, fmt.Errorf("%s: %w", op, err)
 	}
+
 	return user, nil
+}
+
+// GetUserByID получает пользователя по его ID
+func (u *UserOperationsPostgres) GetUserByID(ctx context.Context, id int64) (domain.User, error) {
+	const op = "storage.postgres.GetUserByID"
+
+	var user domain.User
+	query := fmt.Sprintf("SELECT id, username, email, role, avatar_key, creation_timestamp FROM %s WHERE id=$1", usersTable)
+
+	if err := u.db.GetContext(ctx, &user, query, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.User{}, domain.ErrUserNotFound
+		}
+		return domain.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
+// UpdateAvatarKey обновляет путь к аватарке пользователя
+func (u *UserOperationsPostgres) UpdateAvatarKey(ctx context.Context, userID int64, avatarKey string) error {
+	const op = "storage.postgres.UpdateAvatarKey"
+
+	query := fmt.Sprintf("UPDATE %s SET avatar_key = $1 WHERE id = $2", usersTable)
+
+	res, err := u.db.ExecContext(ctx, query, avatarKey, userID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if rows == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
 }
 
 func (u *UserOperationsPostgres) SetSession(ctx context.Context, userId int64, session tokenmanager.Session) error {

@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Env            string     `yaml:"env" env-default:"local"` // текущее окружение: local, dev, prod
 	GRPC           GRPCConfig `yaml:"auth_service"`
+	FileService    GRPCClient `yaml:"file_service"`
 	Db             DBConfig
 	MigrationsPath string // путь до директории с миграциями
 	SigningKey     string
@@ -29,6 +30,11 @@ type DBConfig struct {
 type GRPCConfig struct {
 	Port    int           `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"` // таймаут обработки запросов
+}
+
+type GRPCClient struct {
+	Address string        `yaml:"address"`
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 func MustLoad() *Config {

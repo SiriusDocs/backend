@@ -10,4 +10,6 @@ var (
     ErrTokenNotFound = errors.New("refresh token not found")
     ErrInsertToken = errors.New("the new token cannot be written to the database")
     ErrInvalidToken = errors.New("invalid refresh token")
+
+    ErrAvatarNotFound = errors.New("user has no avatar")
 )

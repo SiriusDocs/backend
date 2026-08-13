@@ -12,6 +12,8 @@ import (
 type UserOperations interface {
 	CreateUser(ctx context.Context, username string, email string, password string) (int64, error)
 	GetUser(ctx context.Context, email string, password string) (domain.User, error)
+	GetUserByID(ctx context.Context, id int64) (domain.User, error)
+	UpdateAvatarKey(ctx context.Context, userID int64, avatarKey string) error
 	SetSession(ctx context.Context, userId int64, session tokenmanager.Session) error
 	IsTokenValid(ctx context.Context, refreshToken string) (int64, error)
 }

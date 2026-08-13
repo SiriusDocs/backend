@@ -1,7 +1,5 @@
 package domain
 
-
-
 type RegisterRequest struct {
 	UserName string `json:"username"`
 	Email    string `json:"email" binding:"required,email"`
@@ -38,4 +36,28 @@ type TokensRequest struct {
 type TokensResponse struct {
 	Status string        `json:"status" example:"success"`
 	Data   TokenResponse `json:"data"`
+}
+
+// --- PROFILE & AVATAR MODELS ---
+
+type GetProfileResponse struct {
+	UserId    int64  `json:"user_id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
+	AvatarUrl string `json:"avatar_url,omitempty"`
+}
+
+type GetAvatarResponse struct {
+	AvatarUrl string `json:"avatar_url"`
+}
+
+type UploadAvatarUrlRequest struct {
+	UserId      int64  `json:"user_id" binding:"required"`
+	ContentType string `json:"content_type" binding:"required" example:"image/png"`
+}
+
+type UploadAvatarUrlResponse struct {
+	UploadUrl string `json:"upload_url"`
+	AvatarKey string `json:"avatar_key"`
 }

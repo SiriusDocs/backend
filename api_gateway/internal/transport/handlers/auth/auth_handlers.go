@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"net/http"
+	"strconv"
 
 	"github.com/SiriusDocs/backend/api_gateway/internal/domain"
 	"github.com/SiriusDocs/backend/api_gateway/internal/lib/response"
@@ -105,4 +107,111 @@ func (h *Handler) refreshToken(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{"access_token": resp.AccessToken, "refresh_token": resp.RefreshToken})
+}
+
+// @Summary      Get user profile
+// @Description  Returns profile info including avatar presigned download URL
+// @Tags         auth
+// @Produce      json
+// @Param        user_id path int true "User ID"
+// @Success      200  {object}  response.Response{data=domain.GetProfileResponse}
+// @Failure      400  {object}  response.ErrorResponseMes
+// @Failure      404  {object}  response.ErrorResponseMes
+// @Failure      500  {object}  response.ErrorResponseMes
+// @Router       /auth/profile/{user_id} [get]
+func (h *Handler) getProfile(c *gin.Context) {
+	userIDStr := c.Param("user_id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil || userID <= 0 {
+		response.ErrorResponse(c, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.client.Timeout)
+	defer cancel()
+
+	resp, err := h.service.GetProfile(ctx, &auth.GetProfileRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		response.ParseGRPCError(c, h.log, err, "get user profile")
+		return
+	}
+
+	response.Success(c, domain.GetProfileResponse{
+		UserId:    resp.UserId,
+		Username:  resp.Username,
+		Email:     resp.Email,
+		Role:      resp.UserRole,
+		AvatarUrl: resp.AvatarUrl,
+	})
+}
+
+// @Summary      Get user avatar URL
+// @Description  Returns presigned GET URL for user avatar
+// @Tags         auth
+// @Produce      json
+// @Param        user_id path int true "User ID"
+// @Success      200  {object}  response.Response{data=domain.GetAvatarResponse}
+// @Failure      400  {object}  response.ErrorResponseMes
+// @Failure      404  {object}  response.ErrorResponseMes
+// @Failure      500  {object}  response.ErrorResponseMes
+// @Router       /auth/avatar/{user_id} [get]
+func (h *Handler) getAvatar(c *gin.Context) {
+	userIDStr := c.Param("user_id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil || userID <= 0 {
+		response.ErrorResponse(c, http.StatusBadRequest, "invalid user_id")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.client.Timeout)
+	defer cancel()
+
+	resp, err := h.service.GetAvatar(ctx, &auth.GetAvatarRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		response.ParseGRPCError(c, h.log, err, "get user avatar")
+		return
+	}
+
+	response.Success(c, domain.GetAvatarResponse{
+		AvatarUrl: resp.AvatarUrl,
+	})
+}
+
+// @Summary      Request avatar upload URL
+// @Description  Generates presigned S3 PUT URL for uploading user avatar directly
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        input body domain.UploadAvatarUrlRequest true "Upload avatar request"
+// @Success      200  {object}  response.Response{data=domain.UploadAvatarUrlResponse}
+// @Failure      400  {object}  response.ErrorResponseMes
+// @Failure      500  {object}  response.ErrorResponseMes
+// @Router       /auth/avatar/upload-url [post]
+func (h *Handler) generateAvatarUploadUrl(c *gin.Context) {
+	var input domain.UploadAvatarUrlRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.client.Timeout)
+	defer cancel()
+
+	resp, err := h.service.GenerateAvatarUploadUrl(ctx, &auth.GenerateAvatarUploadUrlRequest{
+		UserId:      input.UserId,
+		ContentType: input.ContentType,
+	})
+	if err != nil {
+		response.ParseGRPCError(c, h.log, err, "generate avatar upload url")
+		return
+	}
+
+	response.Success(c, domain.UploadAvatarUrlResponse{
+		UploadUrl: resp.UploadUrl,
+		AvatarKey: resp.AvatarKey,
+	})
 }

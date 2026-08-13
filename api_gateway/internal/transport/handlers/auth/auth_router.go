@@ -25,8 +25,14 @@ func New(log *slog.Logger, service services.AuthService, client  *config.GRPCCli
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	authGroup := rg.Group("/auth")
 	{
+		// Авторизация
 		authGroup.POST("/sign-up", h.signUp)
 		authGroup.POST("/sign-in", h.signIn)
 		authGroup.POST("/refresh", h.refreshToken)
+
+		// Профиль и аватарка
+		authGroup.GET("/profile/:user_id", h.getProfile)
+		authGroup.GET("/avatar/:user_id", h.getAvatar)
+		authGroup.POST("/avatar/upload-url", h.generateAvatarUploadUrl)
 	}
 }

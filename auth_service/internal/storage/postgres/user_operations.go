@@ -62,7 +62,7 @@ func (u *UserOperationsPostgres) GetUserByID(ctx context.Context, id int64) (dom
 	const op = "storage.postgres.GetUserByID"
 
 	var user domain.User
-	query := fmt.Sprintf("SELECT id, username, email, role, avatar_key, creation_timestamp FROM %s WHERE id=$1", usersTable)
+	query := fmt.Sprintf("SELECT id, username, email, user_role, avatar_key, creation_timestamp FROM %s WHERE id=$1", usersTable)
 
 	if err := u.db.GetContext(ctx, &user, query, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
